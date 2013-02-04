@@ -5,11 +5,9 @@ module BZMQ
       context = Context.context(options[:io_threads] || 1)
       @socket = context.socket(type)
       raise SocketError unless @socket
-      error_check do
-        @socket.setsockopt ZMQ::LINGER, options[:linger] || -1
-        @socket.setsockopt ZMQ::RCVTIMEO, options[:timeout] || -1
-        @socket.setsockopt ZMQ::SNDTIMEO, options[:timeout] || -1
-      end
+      error_check { @socket.setsockopt ZMQ::LINGER, options[:linger] || -1 }
+      error_check { @socket.setsockopt ZMQ::RCVTIMEO, options[:timeout] || -1 }
+      error_check { @socket.setsockopt ZMQ::SNDTIMEO, options[:timeout] || -1 }
     end
 
     def bind(address)
