@@ -3,7 +3,7 @@ $: << File.expand_path('../lib', __FILE__)
 Gem::Specification.new do |s|
   s.name        = 'bzmq'
   s.version     = '0.0.1'
-  s.platform    = Gem::Platform::JAVA
+  s.platform    = 'java'
   s.authors     = ['Joel Segerlind']
   s.email       = ['joel@kogito.se']
   s.homepage    = ''
@@ -18,6 +18,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'ruby-debug'
 
   require 'rake'
-  s.files         = FileList['lib/bzmq.rb','lib/context.rb','lib/socket.rb','lib/sockets.rb']
+  s.files         = FileList['lib/bzmq.rb','lib/bzmq/context.rb','lib/bzmq/socket.rb','lib/bzmq/sockets.rb']
   s.require_paths = ['lib']
 end
