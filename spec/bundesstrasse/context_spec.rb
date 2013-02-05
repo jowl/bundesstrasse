@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-module BZMQ
+module Bundesstrasse
   describe Context do
 
     after do

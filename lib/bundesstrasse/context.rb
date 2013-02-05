@@ -1,5 +1,5 @@
 
-module BZMQ
+module Bundesstrasse
   ContextError = Class.new(StandardError)
 
   class Context

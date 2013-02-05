@@ -1,5 +1,5 @@
 
-module BZMQ
+module Bundesstrasse
   class Socket
     def initialize(type, options={})
       context = Context.context(options[:io_threads] || 1)

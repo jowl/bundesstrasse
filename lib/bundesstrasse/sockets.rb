@@ -1,5 +1,5 @@
 
-module BZMQ
+module Bundesstrasse
   class ReqSocket < Socket
     def initialize(options={})
       super(ZMQ::REQ, options)

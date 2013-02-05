@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-module BZMQ
+module Bundesstrasse
   describe Socket do
     let(:socket) { double('socket').tap { |d| d.stub(setsockopt: 0) } }
     let(:context) { double('context').tap { |d| d.stub(socket: socket) } }

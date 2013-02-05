@@ -1,16 +1,14 @@
 $: << File.expand_path('../lib', __FILE__)
 
 Gem::Specification.new do |s|
-  s.name        = 'bzmq'
+  s.name        = 'bundesstrasse'
   s.version     = '0.0.1'
   s.platform    = 'java'
   s.authors     = ['Joel Segerlind']
   s.email       = ['joel@kogito.se']
-  s.homepage    = ''
+  s.homepage    = 'https://github.com/jowl/bundesstrasse'
   s.summary     = 'A thin wrapper around ffi-rzmq, providing basic functionality'
   s.description = 'Basic ZeroMQ wrapper for JRuby'
-
-  s.rubyforge_project = 'bzmq'
 
   s.add_dependency 'ffi-rzmq'
   
@@ -18,6 +16,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'ruby-debug'
 
   require 'rake'
-  s.files         = FileList['lib/bzmq.rb','lib/bzmq/context.rb','lib/bzmq/socket.rb','lib/bzmq/sockets.rb']
+  s.files         = FileList['lib/bundesstrasse.rb','lib/bundesstrasse/context.rb','lib/bundesstrasse/socket.rb','lib/bundesstrasse/sockets.rb']
   s.require_paths = ['lib']
 end
