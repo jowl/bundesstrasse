@@ -1,7 +1,7 @@
 
 # Bundesstraße
 
-A thin wrapper around [ffi-rzmq](https://github.com/chuckremes/ffi-rzmq) for JRuby, providing only basic functionality. Name inspirired by [iconara](https://github.com/iconara)'s RabbitMQ wrapper [autobahn](https://github.com/iconara/autobahn).
+A thin wrapper around [ffi-rzmq](https://github.com/chuckremes/ffi-rzmq) for JRuby, providing only basic functionality. Name inspirired by [iconara](https://github.com/iconara)'s RabbitMQ wrapper [autobahn](https://github.com/burtcorp/autobahn).
 
 ## Example usage
 
