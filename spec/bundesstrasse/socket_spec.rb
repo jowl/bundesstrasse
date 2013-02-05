@@ -12,11 +12,17 @@ module Bundesstrasse
     subject { described_class.new(0) }
 
     describe '#initialize' do
-      it 'sets linger and send/recv timeout options' do
+      it 'sets provided options on socket' do
         socket.should_receive(:setsockopt).with(ZMQ::LINGER, 0).and_return(0)
-        socket.should_receive(:setsockopt).with(ZMQ::RCVTIMEO, 1_000).and_return(0)
-        socket.should_receive(:setsockopt).with(ZMQ::SNDTIMEO, 1_000).and_return(0)
-        described_class.new(0, timeout: 1_000, linger: 0)
+        socket.should_receive(:setsockopt).with(ZMQ::SNDBUF, 10).and_return(0)
+        described_class.new(0, sndbuf: 10, linger: 0)
+      end
+
+      it 'sets default options on socket' do
+        socket.should_receive(:setsockopt).with(ZMQ::LINGER, 0).and_return(0)
+        socket.should_receive(:setsockopt).with(ZMQ::SNDTIMEO, -1).and_return(0)
+        socket.should_receive(:setsockopt).with(ZMQ::RCVTIMEO, -1).and_return(0)
+        described_class.new(0)
       end
     end
 

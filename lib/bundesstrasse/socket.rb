@@ -2,12 +2,17 @@
 module Bundesstrasse
   class Socket
     def initialize(type, options={})
-      context = Context.context(options[:io_threads] || 1)
+      options = options.dup
+      context = Context.context(options.delete(:io_threads) || 1)
       @socket = context.socket(type)
       raise SocketError unless @socket
-      error_check { @socket.setsockopt ZMQ::LINGER, options[:linger] || -1 }
-      error_check { @socket.setsockopt ZMQ::RCVTIMEO, options[:timeout] || -1 }
-      error_check { @socket.setsockopt ZMQ::SNDTIMEO, options[:timeout] || -1 }
+      DEFAULT_OPTIONS.merge(options).each do |option, value|
+        begin
+          error_check { @socket.setsockopt ZMQ.const_get(option.upcase), value }
+        rescue NameError => e
+          raise ArgumentError, "Unknown socket option '#{option}'", e.backtrace
+        end
+      end
     end
 
     def bind(address)
@@ -44,6 +49,13 @@ module Bundesstrasse
       end
       true
     end
+
+    DEFAULT_OPTIONS = {
+      linger: 0,
+      rcvtimeo: -1,
+      sndtimeo: -1,
+    }
+
   end
 
   class SocketError < StandardError
