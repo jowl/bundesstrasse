@@ -3,20 +3,66 @@ require 'spec_helper'
 module Bundesstrasse
   describe Context do
 
-    after do
-      described_class.instance_variable_set(:@context,nil)
-      described_class.instance_variable_set(:@io_threads,nil)
+    let(:type) { 1 }
+    let(:socket) { double('socket') }
+    let(:socket_class) do
+      double('socket_class').tap { |s| s.stub(new: socket, type: type) }
     end
 
-    describe '.context' do
-      it 'creates one context only' do
-        context = described_class.context
-        described_class.context.should == context
+    let(:zmq_socket) { double('socket') }
+    let(:zmq_context) do
+      double('context').tap do |s|
+        s.stub(socket: zmq_socket, context: true)
+        s.stub(:terminate) { s.stub(context: nil) }
+      end
+    end
+
+    subject { described_class.new(zmq_context) }
+
+    describe '#socket' do
+      it 'raises ContextError if context has been terminated' do
+        subject.terminate!
+        expect { subject.socket(socket_class) }.to raise_error(ContextError)
       end
 
-      it 'raises error if called with different argument' do
-        described_class.context(10)
-        expect { described_class.context(11) }.to raise_error(ContextError)
+      it 'raises ContextError if unable to create socket' do
+        zmq_context.stub(socket: nil)
+        expect { subject.socket(socket_class) }.to raise_error(ContextError)
+      end
+
+      it 'creates an instance of the provided socket class' do
+        socket_class.should_receive(:new).with(zmq_socket, anything).and_return(socket)
+        subject.socket(socket_class)
+      end
+
+      it 'uses #type on socket class to determine ZMQ socket' do
+        zmq_context.should_receive(:socket).with(type)
+        subject.socket(socket_class)
+      end
+    end
+
+    describe '#terminate!' do
+      it 'terminates ZMQ context' do
+        zmq_context.should_receive(:terminate)
+        subject.terminate!
+      end
+    end
+
+    describe '#terminated?' do
+      it "checks if ZMQ context's context is defined" do
+        # contexts all the way down
+        subject.should_not be_terminated
+        subject.terminate!
+        subject.should be_terminated
+      end
+    end
+
+    describe '.create' do
+      it 'creates a context from an actual ZMQ context' do
+        ZMQ::Context.should_receive(:create).and_call_original
+        context = described_class.create
+        context.class.should == described_class
+        context.terminate!
       end
     end
   end

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 # Bundesstraße
 
@@ -9,52 +10,55 @@ A thin wrapper around [ffi-rzmq](https://github.com/chuckremes/ffi-rzmq) for JRu
 require 'bundesstrasse'
 
 class Client
-  def initialize
-    @socket = Bundesstrasse::ReqSocket.new
-    @socket.connect('tcp://127.0.0.1:5678')
+  def initialize(context)
+    @context = context
+  end
+
+  def connect!(address)
+    @socket ||= @context.socket(Bundesstrasse::ReqSocket)
+    @socket.connect(address)
   end
 
   def send(msg)
     @socket.write(msg)
     @socket.read
   end
-  
+
   def disconnect!
     @socket.close
   end
 end
 
 class Server
-  def initialize
-    @socket = Bundesstrasse::RepSocket.new(timeout: 500)
-    @socket.bind('tcp://*:5678')
+  def initialize(context)
+    @context = context
   end
-  
-  def start
-    @running = true
-    while @running
-      begin
-        msg = @socket.read
-        @socket.write "Server got: #{msg}"
-      rescue Bundesstrasse::SocketError => e
-        next if e.error_code == 35 # resource temporarily unavailable (timeout)
-        raise e
-      end
-    end
-    @socket.close
-   end
 
-  def stop
-    @running = false
+  def start
+    socket = @context.socket(Bundesstrasse::RepSocket)
+    socket.bind('tcp://*:5678')
+    loop do
+      msg = socket.read
+      socket.write "Server got: #{msg}"
+    end
+  rescue Bundesstrasse::TermError
+    # TermErrors are raised when context is terminated,
+    # the socket is closed automatically
   end
 end
 
-client = Client.new
-server = Server.new
+context = Bundesstrasse::Context.create
+
+client = Client.new(context)
+client.connect!('tcp://127.0.0.1:5678')
+
+server = Server.new(context)
 server_thread = Thread.new { server.start }
+
 puts client.send("Hello server") # prints 'Server got: Hello server'
+
 client.disconnect!
-server.stop
+context.terminate!
+
 server_thread.join
 ```
-

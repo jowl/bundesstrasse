@@ -1,58 +1,58 @@
 
 module Bundesstrasse
   class ReqSocket < Socket
-    def initialize(options={})
-      super(ZMQ::REQ, options)
+    def self.type
+      ZMQ::REQ
     end
   end
 
   class RepSocket < Socket
-    def initialize(options={})
-      super(ZMQ::REP, options)
+    def self.type
+      ZMQ::REP
     end
   end
 
   class DealerSocket < Socket
-    def initialize(options={})
-      super(ZMQ::DEALER, options)
+    def self.type
+      ZMQ::DEALER
     end
   end
 
   class RouterSocket < Socket
-    def initialize(options={})
-      super(ZMQ::ROUTER, options)
+    def self.type
+      ZMQ::ROUTER
     end
   end
 
   class PushSocket < Socket    
-    def initialize(options={})
-      super(ZMQ::PUSH, options)
+    def self.type
+      ZMQ::PUSH
     end
   end
 
   class PullSocket < Socket
-    def initialize(options={})
-      super(ZMQ::PULL, options)
+    def self.type
+      ZMQ::PULL
     end
   end
 
   class PubSocket < Socket
-    def initialize(options={})
-      super(ZMQ::PUB, options)
+    def self.type
+      ZMQ::PUB
     end
   end
 
   class SubSocket < Socket
-    def initialize(options={})
-      super(ZMQ::SUB, options)
+    def self.type
+      ZMQ::SUB
     end
     
     def subscribe(topic)
-      error_check { @socket.setsockopt(::ZMQ::SUBSCRIBE, topic) }
+      error_check { @socket.setsockopt(ZMQ::SUBSCRIBE, topic) }
     end
     
     def unsubscribe(topic)
-      error_check { @socket.setsockopt(::ZMQ::UNSUBSCRIBE, topic) }
+      error_check { @socket.setsockopt(ZMQ::UNSUBSCRIBE, topic) }
     end
   end
 end
