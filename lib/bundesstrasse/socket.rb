@@ -45,9 +45,22 @@ module Bundesstrasse
 
     def error_check(&block)
       unless ZMQ::Util.resultcode_ok? block.call
-        raise SocketError.new(ZMQ::Util.error_string, ZMQ::Util.errno)
+        error_class = case errno
+                      when ZMQ::ETERM  then TermError
+                      when ZMQ::EAGAIN then AgainError
+                      else SocketError
+                      end
+        raise error_class.new(error_string, errno)
       end
       true
+    end
+
+    def errno
+      ZMQ::Util.errno
+    end
+
+    def error_string
+      ZMQ::Util.error_string
     end
 
     DEFAULT_OPTIONS = {
@@ -55,7 +68,6 @@ module Bundesstrasse
       rcvtimeo: -1,
       sndtimeo: -1,
     }
-
   end
 
   class SocketError < StandardError
@@ -65,4 +77,7 @@ module Bundesstrasse
       super(message)
     end
   end
+
+  TermError = Class.new(SocketError)
+  AgainError = Class.new(SocketError)
 end

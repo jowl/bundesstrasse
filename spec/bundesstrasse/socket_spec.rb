@@ -50,9 +50,21 @@ module Bundesstrasse
             subject.connect('')
           end
 
-          it "raises SocketError on when #{zmq_method} fails" do
-            socket.stub(zmq_method).and_return(-1)
-            expect { subject.send(method,'') }.to raise_error(SocketError)
+          it "raises SocketError when #{zmq_method} fails" do
+            socket.stub(zmq_method => -1)
+            expect { subject.send(method, '') }.to raise_error(SocketError)
+          end
+
+          it 'raises AgainError when resource is temporarily unavailable' do
+            subject.stub(errno: 35)
+            socket.stub(zmq_method => -1)
+            expect { subject.send(method, '') }.to raise_error(AgainError)
+          end
+
+          it 'raises TermError when context is terminated' do
+            subject.stub(errno: 156384765)
+            socket.stub(zmq_method => -1)
+            expect { subject.send(method, '') }.to raise_error(TermError)
           end
 
           it "doesn't always raise error" do
