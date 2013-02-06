@@ -1,8 +1,10 @@
 $: << File.expand_path('../lib', __FILE__)
 
+require 'bundesstrasse/version'
+
 Gem::Specification.new do |s|
   s.name        = 'bundesstrasse'
-  s.version     = '0.0.2'
+  s.version     = Bundesstrasse::VERSION
   s.platform    = 'java'
   s.authors     = ['Joel Segerlind']
   s.email       = ['joel@kogito.se']
@@ -14,8 +16,8 @@ Gem::Specification.new do |s|
   
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'ruby-debug'
+  s.add_development_dependency 'rake'
 
-  require 'rake'
-  s.files         = FileList['lib/bundesstrasse.rb','lib/bundesstrasse/context.rb','lib/bundesstrasse/socket.rb','lib/bundesstrasse/sockets.rb']
-  s.require_paths = ['lib']
+  s.files         = Dir['lib/**/*.rb']
+  s.require_paths = %w[lib]
 end
