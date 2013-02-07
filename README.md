@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
-
 # Bundesstraße
 
 A thin wrapper around [ffi-rzmq](https://github.com/chuckremes/ffi-rzmq) for JRuby, providing only basic functionality. Name inspirired by [iconara](https://github.com/iconara)'s RabbitMQ wrapper [autobahn](https://github.com/burtcorp/autobahn).
 
 ## Example usage
+
+### Basic client/server setup
 
 ```ruby
 require 'bundesstrasse'
@@ -61,4 +61,44 @@ client.disconnect!
 context.terminate!
 
 server_thread.join
+```
+
+### World's most boring chat
+
+Client code:
+```ruby
+require 'bundesstrasse'
+
+ctx = Bundesstrasse::Context.create
+thread = Thread.new do
+  req = ctx.socket(Bundesstrasse::ReqSocket)
+  req.connect('tcp://127.0.0.1:5678')
+  puts "Welcome"
+  loop do
+    print "You:   "
+    req.write gets.strip
+    puts "Other: #{req.read}"
+  end
+end
+Signal.trap('INT') { ctx.terminate! }
+thread.join
+```
+
+Server code:
+```ruby
+require 'bundesstrasse'
+
+ctx = Bundesstrasse::Context.create
+thread = Thread.new do
+  rep = ctx.socket(Bundesstrasse::RepSocket)
+  rep.connect('tcp://*:5678')
+  puts "Welcome"
+  loop do
+    puts "Other: #{rep.read}"
+    print "You:   "
+    rep.write gets.strip
+  end
+end
+Signal.trap('INT') { ctx.terminate! }
+thread.join
 ```
