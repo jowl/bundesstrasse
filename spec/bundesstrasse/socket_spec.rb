@@ -14,6 +14,12 @@ module Bundesstrasse
       end
     end
 
+    describe '#socket' do
+      it 'exposes ZMQ socket' do
+        subject.socket.should == zmq_socket
+      end
+    end
+
     [:bind, :connect].each do |method|
       describe "##{method}" do
         it 'raises SocketError on failure' do

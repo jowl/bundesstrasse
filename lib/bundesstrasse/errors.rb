@@ -20,7 +20,7 @@ module Bundesstrasse
       ZMQ::Util.error_string
     end
 
-    def error_check(errors={}, &block)
+    def error_check(&block)
       if (res = block.call).is_a? Fixnum
         res = res >= 0
       end

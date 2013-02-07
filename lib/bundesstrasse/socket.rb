@@ -3,6 +3,7 @@ module Bundesstrasse
   class Socket
     include Errors
 
+    attr_reader :socket
     def initialize(socket, options={})
       @socket = socket
       setup!(options)
