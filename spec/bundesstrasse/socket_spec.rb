@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module Bundesstrasse
   describe Socket do
-    let(:zmq_socket) { double('socket').tap { |d| d.stub(setsockopt: 0, close: 0) } }
+    let(:zmq_socket) { double('socket').tap { |d| d.stub(setsockopt: 0, close: 0, socket: :pointer) } }
 
     subject { described_class.new(zmq_socket) }
 
@@ -15,8 +15,8 @@ module Bundesstrasse
     end
 
     describe '#socket' do
-      it 'exposes ZMQ socket' do
-        subject.socket.should == zmq_socket
+      it 'exposes pointer to ZMQ socket' do
+        subject.pointer.should == :pointer
       end
     end
 

@@ -12,7 +12,7 @@ module Bundesstrasse
     
     def start
       error_check do
-        ZMQ::LibZMQ.zmq_device(@type, @frontend.socket.socket, @backend.socket.socket)
+        ZMQ::LibZMQ.zmq_device(@type, @frontend.pointer, @backend.pointer)
       end
     end
 

@@ -4,9 +4,8 @@ module Bundesstrasse
   describe Device do
 
     let(:type) { 1 }
-    let(:zmq_socket) { double('socket').tap { |s| s.stub(socket: :ffi_socket) } }
-    let(:frontend) { double('socket').tap { |s| s.stub(socket: zmq_socket, close: 0) } }
-    let(:backend) { double('socket').tap { |s| s.stub(socket: zmq_socket, close: 0) } }
+    let(:frontend) { double('socket').tap { |s| s.stub(pointer: :pointer, close: 0) } }
+    let(:backend) { double('socket').tap { |s| s.stub(pointer: :pointer, close: 0) } }
 
     subject { described_class.new(type, frontend, backend) }
 
@@ -17,7 +16,7 @@ module Bundesstrasse
       end
 
       it 'starts device using libzmq#zmq_device' do
-        ZMQ::LibZMQ.should_receive(:zmq_device).with(type, :ffi_socket, :ffi_socket).and_return(-1)
+        ZMQ::LibZMQ.should_receive(:zmq_device).with(type, :pointer, :pointer).and_return(-1)
         subject.start
       end
 

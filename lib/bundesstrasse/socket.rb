@@ -3,7 +3,6 @@ module Bundesstrasse
   class Socket
     include Errors
 
-    attr_reader :socket
     def initialize(socket, options={})
       @socket = socket
       setup!(options)
@@ -28,6 +27,10 @@ module Bundesstrasse
 
     def write(message)
       connected_error_check { @socket.send_string message }
+    end
+
+    def pointer
+      @socket.socket
     end
 
     def self.type
