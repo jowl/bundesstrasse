@@ -4,8 +4,8 @@ module Bundesstrasse
   describe Device do
 
     let(:type) { 1 }
-    let(:frontend) { double('socket').tap { |s| s.stub(pointer: :pointer, close: 0) } }
-    let(:backend) { double('socket').tap { |s| s.stub(pointer: :pointer, close: 0) } }
+    let(:frontend) { double('socket').tap { |s| s.stub(pointer: :pointer, close!: 0) } }
+    let(:backend) { double('socket').tap { |s| s.stub(pointer: :pointer, close!: 0) } }
 
     subject { described_class.new(type, frontend, backend) }
 
@@ -21,7 +21,7 @@ module Bundesstrasse
       end
 
       it 'closes both sockets on termination' do
-        [frontend,backend].map { |s| s.should_receive(:close).and_return(0) }
+        [frontend,backend].map { |s| s.should_receive(:close!).and_return(0) }
         subject.start
       end
 

@@ -19,8 +19,8 @@ module Bundesstrasse
     private
 
     def close!
-      @frontend.close
-      @backend.close
+      @frontend.close!
+      @backend.close!
     end
 
     def error_check(&block)

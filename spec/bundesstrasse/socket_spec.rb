@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module Bundesstrasse
   describe Socket do
-    let(:zmq_socket) { double('socket').tap { |d| d.stub(setsockopt: 0, close: 0, socket: :pointer) } }
+    let(:zmq_socket) { double('socket').tap { |d| d.stub(setsockopt: 0, close: 0, socket: :pointer, connect: 0) } }
 
     subject { described_class.new(zmq_socket) }
 
@@ -73,6 +73,28 @@ module Bundesstrasse
             expect { subject.send(method,'') }.not_to raise_error(SocketError)
           end
         end
+      end
+    end
+
+    describe '#connected?' do
+      it 'returns true if connected' do
+        subject.connect('')
+        subject.should be_connected
+      end
+
+      it 'returns false if not connected' do
+        subject.should_not be_connected
+      end
+    end
+
+    describe '#close!' do
+      it 'closes the socket' do
+        zmq_socket.should_receive(:close)
+        subject.close!
+      end
+
+      it "doesn't raise error when not connected/bound" do
+        expect { subject.close! }.not_to raise_error
       end
     end
 

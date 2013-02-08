@@ -16,7 +16,7 @@ module Bundesstrasse
       @connected = error_check { @socket.connect(address) }
     end
 
-    def close
+    def close!
       !(@connected = !error_check { @socket.close })
     end
 
@@ -33,6 +33,10 @@ module Bundesstrasse
       @socket.socket
     end
 
+    def connected?
+      @connected
+    end
+
     def self.type
       raise NotImplementedError, 'Subclasses define constant TYPE'
     end
@@ -40,7 +44,7 @@ module Bundesstrasse
     private
 
     def connected_error_check(&block)
-      raise SocketError, 'Not connected' unless @connected
+      raise SocketError, 'Not connected' unless connected?
       error_check(&block)
     end
 
@@ -48,7 +52,7 @@ module Bundesstrasse
       super
     rescue ZMQError => e
       case e.error_code
-      when ZMQ::ETERM then close && TermError.raise_error(e)
+      when ZMQ::ETERM then close! && TermError.raise_error(e)
       when ZMQ::EAGAIN then AgainError.raise_error(e)
       else SocketError.raise_error(e)
       end
