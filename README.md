@@ -25,7 +25,7 @@ class Client
   end
 
   def disconnect!
-    @socket.close
+    @socket.close!
   end
 end
 
