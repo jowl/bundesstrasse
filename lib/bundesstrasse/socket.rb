@@ -52,7 +52,7 @@ module Bundesstrasse
     end
 
     def self.type
-      raise NotImplementedError, 'Subclasses define constant TYPE'
+      raise NotImplementedError, 'Subclasses must override Socket::type'
     end
 
     private
