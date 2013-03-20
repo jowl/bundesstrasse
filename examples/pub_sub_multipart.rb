@@ -45,6 +45,10 @@ Thread.start do
   # This subscriber socket will subscribe to all greetings. The empty string
   # given to #subscribe is a wildcard subscription.
 
+  # Since the publisher sends multipart messages the subscriber needs to
+  # read all of the parts too. The first part is the routing key (the language)
+  # and the second is the actual message (the greeting).
+
   sub_socket = context.socket(Bundesstrasse::SubSocket)
   sub_socket.connect('tcp://localhost:3333')
   sub_socket.subscribe('')
