@@ -25,8 +25,27 @@ module Bundesstrasse
       buffer
     end
 
-    def write(message)
-      connected_error_check { @socket.send_string message }
+    def write(message, options=nil)
+      connected_error_check { @socket.send_string(message, options || 0) }
+    end
+
+    def read_multipart
+      parts = []
+      loop do
+        parts << read
+        break unless more_parts?
+      end
+      parts
+    end
+
+    def write_multipart(*parts)
+      parts.each do |part|
+        write(part, part == parts.last ? nil : ZMQ::SNDMORE)
+      end
+    end
+
+    def more_parts?
+      @socket.more_parts?
     end
 
     def pointer
