@@ -83,8 +83,7 @@ module Bundesstrasse
 
       it 'returns a list of all parts of a multipart message' do
         parts = %w[hello world !]
-        zmq_socket.stub(:more_parts?).and_return(true, true, false)
-        zmq_socket.stub(:recv_string) { |buffer| buffer.replace(parts.shift); 0 }
+        zmq_socket.stub(:recv_strings) { |list| list.replace(parts); 0 }
         subject.read_multipart.should == %w[hello world !]
       end
     end
@@ -95,8 +94,7 @@ module Bundesstrasse
       end
 
       it 'sends a list of strings as a multipart message' do
-        zmq_socket.should_receive(:send_string).with('hello', ZMQ::SNDMORE).and_return(0)
-        zmq_socket.should_receive(:send_string).with('world', 0).and_return(0)
+        zmq_socket.should_receive(:send_strings).with(['hello', 'world']).and_return(0)
         subject.write_multipart('hello', 'world')
       end
     end
