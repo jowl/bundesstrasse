@@ -76,6 +76,42 @@ module Bundesstrasse
       end
     end
 
+    describe '#read_multipart' do
+      before do
+        subject.connect('')
+      end
+
+      it 'returns a list of all parts of a multipart message' do
+        parts = %w[hello world !]
+        zmq_socket.stub(:recv_strings) { |list| list.replace(parts); 0 }
+        subject.read_multipart.should == %w[hello world !]
+      end
+    end
+
+    describe '#write_multipart' do
+      before do
+        subject.connect('')
+      end
+
+      it 'sends a list of strings as a multipart message' do
+        zmq_socket.should_receive(:send_strings).with(['hello', 'world']).and_return(0)
+        subject.write_multipart('hello', 'world')
+      end
+    end
+
+    describe '#more_parts?' do
+      before do
+        subject.connect('')
+      end
+
+      it 'forwards the call to the socket' do
+        zmq_socket.stub(:more_parts?).and_return(true)
+        subject.more_parts?.should be_true
+        zmq_socket.stub(:more_parts?).and_return(false)
+        subject.more_parts?.should be_false
+      end
+    end
+
     describe '#connected?' do
       it 'returns true if connected' do
         subject.connect('')

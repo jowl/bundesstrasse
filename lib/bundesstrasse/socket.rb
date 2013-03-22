@@ -26,7 +26,21 @@ module Bundesstrasse
     end
 
     def write(message)
-      connected_error_check { @socket.send_string message }
+      connected_error_check { @socket.send_string(message) }
+    end
+
+    def read_multipart
+      messages = []
+      connected_error_check { @socket.recv_strings(messages) }
+      messages
+    end
+
+    def write_multipart(*parts)
+      connected_error_check { @socket.send_strings(parts) }
+    end
+
+    def more_parts?
+      @socket.more_parts?
     end
 
     def pointer
