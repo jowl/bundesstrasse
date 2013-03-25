@@ -1,4 +1,3 @@
-
 require 'ffi-rzmq'
 
 require 'bundesstrasse/errors'
