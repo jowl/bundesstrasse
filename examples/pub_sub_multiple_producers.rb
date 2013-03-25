@@ -11,14 +11,23 @@ require 'bundesstrasse'
 # it then exposes a pub socket over TCP. The consumer can subscribe just as
 # if it was a single publisher.
 
-frontend_port = 4444
-backend_uri = 'inproc://pubsub'
+service_port = 4444
+internal_address = 'inproc://pubsub'
 
 context = Bundesstrasse::Context.create
 
+# Forwarder devices look like they are set up the wrong way around, the
+# "frontend" is what talk to your internal pub sockets, and the "backend"
+# is facing external consumers. The meaning of "front" and "back" comes from
+# the direction the messages flow. In a forwarder the messages flow; the 
+# "frontend" is the part where messages come in and the "backend" where messages
+# are sent out (in a queue device messages come in through the "frontend" from
+# an external req socket).
+
 device = Bundesstrasse::ForwarderDevice.create(context)
-device.frontend.bind("tcp://*:#{frontend_port}")
-device.backend.bind(backend_uri)
+frontend.bind(internal_address)
+frontend.subscribe('')
+backend.bind("tcp://*:#{service_port}")
 
 Thread.start do
   Thread.current.abort_on_exception = true
@@ -32,7 +41,7 @@ end
     # Notice that the pub socket does not #bind to the backend, but #connects.
 
     pub_socket = context.socket(Bundesstrasse::PubSocket)
-    pub_socket.connect(backend_uri)
+    pub_socket.connect(internal_address)
 
     loop do
       pub_socket.write_multipart("hello.#{n}", "Hello from #{n}")
@@ -48,7 +57,7 @@ Thread.start do
   # publisher is actually a device.
 
   sub_socket = context.socket(Bundesstrasse::SubSocket)
-  sub_socket.connect("tcp://localhost:#{frontend_port}")
+  sub_socket.connect("tcp://localhost:#{service_port}")
   sub_socket.subscribe('hello.0')
   sub_socket.subscribe('hello.2')
 
