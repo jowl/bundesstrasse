@@ -76,6 +76,28 @@ module Bundesstrasse
       end
     end
 
+    describe '#read_nonblocking' do
+      before do
+        subject.connect('')
+      end
+
+      it 'reads with the nonblocking flag set' do
+        zmq_socket.should_receive(:recv_string).with('', ZMQ::NonBlocking).and_return(0)
+        subject.read_nonblocking
+      end
+    end
+
+    describe '#write_nonblocking' do
+      before do
+        subject.connect('')
+      end
+
+      it 'writes with the nonblocking flag set' do
+        zmq_socket.should_receive(:send_string).with('foo', ZMQ::NonBlocking).and_return(0)
+        subject.write_nonblocking('foo')
+      end
+    end
+
     describe '#read_multipart' do
       before do
         subject.connect('')

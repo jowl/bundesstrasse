@@ -29,6 +29,15 @@ module Bundesstrasse
       connected_error_check { @socket.send_string(message) }
     end
 
+    def read_nonblocking(buffer='')
+      connected_error_check { @socket.recv_string(buffer, ZMQ::NonBlocking) }
+      buffer
+    end
+
+    def write_nonblocking(message)
+      connected_error_check { @socket.send_string(message, ZMQ::NonBlocking) }
+    end
+
     def read_multipart
       messages = []
       connected_error_check { @socket.recv_strings(messages) }
