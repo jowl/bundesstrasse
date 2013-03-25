@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    bundesstrasse (0.0.7-java)
+    bundesstrasse (0.0.8-java)
       ffi-rzmq
 
 GEM
