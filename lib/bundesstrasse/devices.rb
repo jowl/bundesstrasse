@@ -23,8 +23,9 @@ module Bundesstrasse
     end
     
     def self.create(context)
-      frontend = context.socket(SubSocket)
-      backend = context.socket(PubSocket)
+      frontend = context.socket(PubSocket)
+      backend = context.socket(SubSocket)
+      backend.subscribe('')
       new(frontend, backend)
     end
   end
