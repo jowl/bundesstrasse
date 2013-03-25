@@ -29,6 +29,8 @@ end
   Thread.start do
     Thread.current.abort_on_exception = true
 
+    # Notice that the pub socket does not #bind to the backend, but #connects.
+
     pub_socket = context.socket(Bundesstrasse::PubSocket)
     pub_socket.connect(backend_uri)
 
@@ -41,6 +43,9 @@ end
 
 Thread.start do
   Thread.current.abort_on_exception = true
+
+  # The subscriber acts like a normal subscriber, it is not aware that the
+  # publisher is actually a device.
 
   sub_socket = context.socket(Bundesstrasse::SubSocket)
   sub_socket.connect("tcp://localhost:#{frontend_port}")
