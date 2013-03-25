@@ -25,9 +25,9 @@ context = Bundesstrasse::Context.create
 # an external req socket).
 
 device = Bundesstrasse::ForwarderDevice.create(context)
-frontend.bind(internal_address)
-frontend.subscribe('')
-backend.bind("tcp://*:#{service_port}")
+device.frontend.bind(internal_address)
+device.frontend.subscribe('')
+device.backend.bind("tcp://*:#{service_port}")
 
 Thread.start do
   Thread.current.abort_on_exception = true
