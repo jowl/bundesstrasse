@@ -56,6 +56,10 @@ module Bundesstrasse
       @socket.socket
     end
 
+    def socket
+      @socket.socket
+    end
+
     def connected?
       @connected
     end
