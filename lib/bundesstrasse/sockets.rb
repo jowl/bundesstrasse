@@ -55,4 +55,16 @@ module Bundesstrasse
       error_check { @socket.setsockopt(ZMQ::UNSUBSCRIBE, topic) }
     end
   end
+
+  class XPubSocket < Socket
+    def self.type
+      ZMQ::XPUB
+    end
+  end
+
+  class XSubSocket < SubSocket
+    def self.type
+      ZMQ::XSUB
+    end
+  end
 end
