@@ -24,7 +24,7 @@ module Bundesstrasse
     end
   end
 
-  class PushSocket < Socket    
+  class PushSocket < Socket
     def self.type
       ZMQ::PUSH
     end
