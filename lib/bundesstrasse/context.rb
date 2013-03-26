@@ -9,6 +9,7 @@ module Bundesstrasse
 
     def socket(socket_type, options={})
       raise ContextError, 'Context terminated' if terminated?
+      socket_type = translate_socket_type(socket_type)
       zmq_socket = error_check { @zmq_context.socket(socket_type) }
       case socket_type
       when ZMQ::SUB, ZMQ::XSUB
@@ -31,6 +32,16 @@ module Bundesstrasse
 
     def self.create(options={})
       new ZMQ::Context.create(options[:io_threads] || 1)
+    end
+
+    private
+
+    SYMBOLIC_TYPES_LOW  = [:pair, :pub, :sub, :req, :rep, :dealer, :router, :pull, :push, :xpub, :xsub].freeze
+    SYMBOLIC_TYPES_HIGH = SYMBOLIC_TYPES_LOW.map { |s| s.upcase }.freeze
+
+    def translate_socket_type(type)
+      return type unless type.is_a?(Symbol)
+      SYMBOLIC_TYPES_LOW.index(type) || SYMBOLIC_TYPES_HIGH.index(type)
     end
   end
 
