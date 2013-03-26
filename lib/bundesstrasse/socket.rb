@@ -92,6 +92,16 @@ module Bundesstrasse
     end
   end
 
+  class SubSocket < Socket
+    def subscribe(topic)
+      error_check { @socket.setsockopt(ZMQ::SUBSCRIBE, topic) }
+    end
+
+    def unsubscribe(topic)
+      error_check { @socket.setsockopt(ZMQ::UNSUBSCRIBE, topic) }
+    end
+  end
+
   SocketError = Class.new(ZMQError)
   TermError = Class.new(ZMQError)
   AgainError = Class.new(ZMQError)
