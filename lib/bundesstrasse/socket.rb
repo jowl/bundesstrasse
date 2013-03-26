@@ -55,10 +55,7 @@ module Bundesstrasse
     def pointer
       @socket.socket
     end
-
-    def socket
-      @socket.socket
-    end
+    alias_method :socket, :pointer
 
     def connected?
       @connected
