@@ -7,12 +7,12 @@ module Bundesstrasse
     end
     
     def create_endpoint!(options={})
-      @context.socket(RepSocket, options)
+      @context.socket(ZMQ::REP, options)
     end
 
     def self.create(context)
-      frontend = context.socket(RouterSocket)
-      backend = context.socket(DealerSocket)
+      frontend = context.socket(ZMQ::ROUTER)
+      backend = context.socket(ZMQ::DEALER)
       new(context, frontend, backend)
     end
   end
@@ -23,8 +23,8 @@ module Bundesstrasse
     end
     
     def self.create(context)
-      frontend = context.socket(SubSocket)
-      backend = context.socket(PubSocket)
+      frontend = context.socket(ZMQ::SUB)
+      backend = context.socket(ZMQ::PUB)
       new(frontend, backend)
     end
   end
@@ -35,8 +35,8 @@ module Bundesstrasse
     end
     
     def self.create(context)
-      frontend = context.socket(PullSocket)
-      backend = context.socket(PushSocket)
+      frontend = context.socket(ZMQ::PULL)
+      backend = context.socket(ZMQ::PUSH)
       new(frontend, backend)
     end
   end
