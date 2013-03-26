@@ -36,17 +36,16 @@ module Bundesstrasse
 
     private
 
-    SYMBOLIC_TYPES_LOW  = [:pair, :pub, :sub, :req, :rep, :dealer, :router, :pull, :push, :xpub, :xsub].freeze
-    SYMBOLIC_TYPES_HIGH = SYMBOLIC_TYPES_LOW.map { |s| s.upcase }.freeze
+    SYMBOLIC_TYPES  = [:pair, :pub, :sub, :req, :rep, :dealer, :router, :pull, :push, :xpub, :xsub].freeze
 
     def translate_socket_type(type)
       return type unless type.is_a?(Symbol)
-      SYMBOLIC_TYPES_LOW.index(type) || SYMBOLIC_TYPES_HIGH.index(type)
+      SYMBOLIC_TYPES.index(type)
     end
 
     public
 
-    SYMBOLIC_TYPES_LOW.each do |type|
+    SYMBOLIC_TYPES.each do |type|
       define_method("#{type}_socket") do |options={}|
         socket(type, options)
       end
