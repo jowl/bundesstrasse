@@ -41,6 +41,11 @@ module Bundesstrasse
         subject.socket(:PUB)
       end
 
+      it 'creates an instance of the specified socket type, when the type is encoded in the method name' do
+        zmq_context.should_receive(:socket).with(ZMQ::PUB).and_return(zmq_socket)
+        subject.pub_socket
+      end
+
       it 'wraps the ZMQ socket in a Bundesstrasse socket' do
         zmq_context.stub(:socket).with(ZMQ::REQ).and_return(zmq_socket)
         zmq_socket.should_receive(:connect).with('test').and_return(0)

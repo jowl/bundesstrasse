@@ -39,7 +39,7 @@ end
 
     # Notice that the pub socket does not #bind to the backend, but #connects.
 
-    pub_socket = context.socket(:pub)
+    pub_socket = context.pub_socket
     pub_socket.connect(internal_address)
 
     loop do
@@ -55,7 +55,7 @@ Thread.start do
   # The subscriber acts like a normal subscriber, it is not aware that the
   # publisher is actually a device.
 
-  sub_socket = context.socket(:sub)
+  sub_socket = context.sub_socket
   sub_socket.connect("tcp://localhost:#{service_port}")
   sub_socket.subscribe('hello.0')
   sub_socket.subscribe('hello.2')
