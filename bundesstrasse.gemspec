@@ -5,7 +5,7 @@ require 'bundesstrasse/version'
 Gem::Specification.new do |s|
   s.name        = 'bundesstrasse'
   s.version     = Bundesstrasse::VERSION
-  s.platform    = 'java'
+  s.platform    = Gem::Platform::RUBY
   s.authors     = ['Joel Segerlind']
   s.email       = ['joel@kogito.se']
   s.homepage    = 'https://github.com/jowl/bundesstrasse'
