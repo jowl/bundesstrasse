@@ -1,1 +1,2 @@
+export PROJECT_JRUBY_OPTS=-J-Djava.library.path=/usr/local/lib
 rvm --create use jruby-1.7.2@bundesstrasse
