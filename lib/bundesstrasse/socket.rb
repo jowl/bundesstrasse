@@ -1,4 +1,3 @@
-
 module Bundesstrasse
   class Socket
     include Errors
