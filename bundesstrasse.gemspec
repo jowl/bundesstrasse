@@ -13,9 +13,8 @@ Gem::Specification.new do |s|
   s.description = 'Basic ZeroMQ wrapper for JRuby'
 
   s.add_dependency 'ffi-rzmq'
-  
+
   s.add_development_dependency 'rspec'
-  s.add_development_dependency 'ruby-debug'
   s.add_development_dependency 'rake'
 
   s.files         = Dir['lib/**/*.rb']
