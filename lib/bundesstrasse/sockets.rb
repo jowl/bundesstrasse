@@ -2,69 +2,69 @@
 module Bundesstrasse
   class ReqSocket < Socket
     def self.type
-      ZMQ::REQ
+      JZMQ::ZMQ::REQ
     end
   end
 
   class RepSocket < Socket
     def self.type
-      ZMQ::REP
+      JZMQ::ZMQ::REP
     end
   end
 
   class DealerSocket < Socket
     def self.type
-      ZMQ::DEALER
+      JZMQ::ZMQ::DEALER
     end
   end
 
   class RouterSocket < Socket
     def self.type
-      ZMQ::ROUTER
+      JZMQ::ZMQ::ROUTER
     end
   end
 
   class PushSocket < Socket
     def self.type
-      ZMQ::PUSH
+      JZMQ::ZMQ::PUSH
     end
   end
 
   class PullSocket < Socket
     def self.type
-      ZMQ::PULL
+      JZMQ::ZMQ::PULL
     end
   end
 
   class PubSocket < Socket
     def self.type
-      ZMQ::PUB
+      JZMQ::ZMQ::PUB
     end
   end
 
   class SubSocket < Socket
     def self.type
-      ZMQ::SUB
+      JZMQ::ZMQ::SUB
     end
-    
+
     def subscribe(topic)
-      error_check { @socket.setsockopt(ZMQ::SUBSCRIBE, topic) }
+      error_check { @socket.subscribe(topic.to_java_bytes) }
     end
-    
+
     def unsubscribe(topic)
-      error_check { @socket.setsockopt(ZMQ::UNSUBSCRIBE, topic) }
+      error_check { @socket.subscribe(topic.to_java_bytes) }
     end
   end
 
   class XPubSocket < Socket
     def self.type
-      ZMQ::XPUB
+      JZMQ::ZMQ::XPUB
     end
   end
 
   class XSubSocket < SubSocket
     def self.type
-      ZMQ::XSUB
+      JZMQ::ZMQ::XSUB
     end
   end
 end

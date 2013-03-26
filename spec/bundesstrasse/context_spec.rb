@@ -13,7 +13,7 @@ module Bundesstrasse
     let(:zmq_context) do
       double('context').tap do |s|
         s.stub(socket: zmq_socket, context: true)
-        s.stub(:terminate) { s.stub(context: nil) }
+        s.stub(:term) { s.stub(context: nil) }
       end
     end
 
@@ -26,7 +26,7 @@ module Bundesstrasse
       end
 
       it 'raises ContextError if unable to create socket' do
-        zmq_context.stub(socket: nil)
+        zmq_context.stub(:socket).and_raise(JZMQ::ZMQException.new('',-1))
         expect { subject.socket(socket_class) }.to raise_error(ContextError)
       end
 
@@ -43,7 +43,7 @@ module Bundesstrasse
 
     describe '#terminate!' do
       it 'terminates ZMQ context' do
-        zmq_context.should_receive(:terminate)
+        zmq_context.should_receive(:term)
         subject.terminate!
       end
     end
@@ -59,7 +59,7 @@ module Bundesstrasse
 
     describe '.create' do
       it 'creates a context from an actual ZMQ context' do
-        ZMQ::Context.should_receive(:create).and_call_original
+        JZMQ::ZMQ.should_receive(:context).and_call_original
         context = described_class.create
         context.class.should == described_class
         context.terminate!

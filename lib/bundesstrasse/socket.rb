@@ -1,58 +1,64 @@
 module Bundesstrasse
   class Socket
-    include Errors
+    include JZMQErrors
 
     def initialize(socket, options={})
       @socket = socket
-      setup!(options)
     end
 
     def bind(address)
-      @connected = error_check { @socket.bind(address) }
+      error_check { @socket.bind(address) }
+      @connected = true
     end
 
     def connect(address)
-      @connected = error_check { @socket.connect(address) }
+      error_check { @socket.connect(address) }
+      @connected = true
     end
 
     def close!
-      !(@connected = !error_check { @socket.close })
+      error_check { @socket.close }
+      !(@connected = false)
     end
 
     def read(buffer='')
-      connected_error_check { @socket.recv_string buffer }
+      connected_error_check { buffer.replace(@socket.recv_str) }
       buffer
     end
 
     def write(message)
-      connected_error_check { @socket.send_string(message) }
+      connected_error_check { @socket.send(message) }
     end
 
     def read_nonblocking(buffer='')
-      connected_error_check { @socket.recv_string(buffer, ZMQ::NonBlocking) }
+      connected_error_check { buffer.replace(@socket.recv_str(JZMQ::ZMQ::NOBLOCK)) }
       buffer
     end
 
     def write_nonblocking(message)
-      connected_error_check { @socket.send_string(message, ZMQ::NonBlocking) }
+      connected_error_check { @socket.send(message, JZMQ::ZMQ::NOBLOCK) }
     end
 
     def read_multipart
-      messages = []
-      connected_error_check { @socket.recv_strings(messages) }
+      messages = [read]
+      messages << read while error_check { @socket.has_receive_more }
       messages
     end
 
     def write_multipart(*parts)
-      connected_error_check { @socket.send_strings(parts) }
+      last = parts.pop
+      parts.each do |part|
+        connected_error_check { @socket.send_more(part) }
+      end
+      connected_error_check { @socket.send(last) }
     end
 
     def more_parts?
-      @socket.more_parts?
+      error_check { @socket.has_receive_more }
     end
 
     def pointer
-      @socket.socket
+      @socket
     end
     alias_method :socket, :pointer
 
@@ -75,19 +81,9 @@ module Bundesstrasse
       super
     rescue ZMQError => e
       case e.error_code
-      when ZMQ::ETERM then close! && TermError.raise_error(e)
-      when ZMQ::EAGAIN then AgainError.raise_error(e)
+      when JZMQ::ZMQ.ETERM then close! && TermError.raise_error(e)
+#      when JZMQ::ZMQ::EAGAIN then AgainError.raise_error(e)
       else SocketError.raise_error(e)
-      end
-    end
-
-    def setup!(options)
-      options.each do |option, value|
-        begin
-          error_check { @socket.setsockopt ZMQ.const_get(option.upcase), value }
-        rescue NameError => e
-          raise ArgumentError, "Unknown socket option '#{option}'", e.backtrace
-        end
       end
     end
   end

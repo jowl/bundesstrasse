@@ -28,4 +28,12 @@ module Bundesstrasse
       res
     end
   end
+
+  module JZMQErrors
+    def error_check(&block)
+      block.call
+    rescue JZMQ::ZMQException => e
+      raise ZMQError.new(e.message, e.error_code)
+    end
+  end
 end

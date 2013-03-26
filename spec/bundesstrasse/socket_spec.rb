@@ -2,34 +2,26 @@ require 'spec_helper'
 
 module Bundesstrasse
   describe Socket do
-    let(:zmq_socket) { double('socket').tap { |d| d.stub(setsockopt: 0, close: 0, socket: :pointer, connect: 0) } }
+    let(:zmq_socket) { double('socket').tap { |d| d.stub(close: 0, connect: 0) } }
 
     subject { described_class.new(zmq_socket) }
 
-    describe '#initialize' do
-      it 'sets provided options on ZMQ socket' do
-        zmq_socket.should_receive(:setsockopt).with(ZMQ::LINGER, 0).and_return(0)
-        zmq_socket.should_receive(:setsockopt).with(ZMQ::SNDBUF, 10).and_return(0)
-        described_class.new(zmq_socket, sndbuf: 10, linger: 0)
-      end
-    end
-
     describe '#socket' do
-      it 'exposes pointer to ZMQ socket' do
-        subject.pointer.should == :pointer
+      it 'exposes JZMQ socket' do
+        subject.pointer.should == zmq_socket
       end
     end
 
     [:bind, :connect].each do |method|
       describe "##{method}" do
         it 'raises SocketError on failure' do
-          zmq_socket.stub(method).and_return(-1)
+          zmq_socket.stub(method).and_raise(JZMQ::ZMQException.new('',-1))
           expect { subject.send(method,'') }.to raise_error(SocketError)
         end
       end
     end
 
-    {read: :recv_string, write: :send_string}.each do |method, zmq_method|
+    {read: :recv_str, write: :send}.each do |method, zmq_method|
       describe "##{method}" do
         context 'when not connected/bound' do
           it 'raises SocketError unless connected/bound' do
@@ -45,25 +37,22 @@ module Bundesstrasse
           end
 
           it "raises SocketError when #{zmq_method} fails" do
-            zmq_socket.stub(zmq_method => -1)
+            zmq_socket.stub(zmq_method).and_raise(JZMQ::ZMQException.new('',-1))
             expect { subject.send(method, '') }.to raise_error(SocketError)
           end
 
           it 'raises AgainError when resource is temporarily unavailable' do
-            subject.stub(errno: ZMQ::EAGAIN)
-            zmq_socket.stub(zmq_method => -1)
+            pending "jzmq doesn't raise again errors"
             expect { subject.send(method, '') }.to raise_error(AgainError)
           end
 
           it 'raises TermError when context is terminated' do
-            subject.stub(errno: ZMQ::ETERM)
-            zmq_socket.stub(zmq_method => -1)
+            zmq_socket.stub(zmq_method).and_raise(JZMQ::ZMQException.new('', JZMQ::ZMQ.ETERM))
             expect { subject.send(method, '') }.to raise_error(TermError)
           end
 
           it 'closes socket when context is terminated' do
-            subject.stub(errno: ZMQ::ETERM)
-            zmq_socket.stub(zmq_method => -1)
+            zmq_socket.stub(zmq_method).and_raise(JZMQ::ZMQException.new('', JZMQ::ZMQ.ETERM))
             zmq_socket.should_receive(:close)
             expect { subject.send(method, '') }.to raise_error(TermError)
           end
@@ -82,7 +71,7 @@ module Bundesstrasse
       end
 
       it 'reads with the nonblocking flag set' do
-        zmq_socket.should_receive(:recv_string).with('', ZMQ::NonBlocking).and_return(0)
+        zmq_socket.should_receive(:recv_str).with(JZMQ::ZMQ::NOBLOCK).and_return('')
         subject.read_nonblocking
       end
     end
@@ -93,7 +82,7 @@ module Bundesstrasse
       end
 
       it 'writes with the nonblocking flag set' do
-        zmq_socket.should_receive(:send_string).with('foo', ZMQ::NonBlocking).and_return(0)
+        zmq_socket.should_receive(:send).with('foo', JZMQ::ZMQ::NOBLOCK).and_return(0)
         subject.write_nonblocking('foo')
       end
     end
@@ -104,8 +93,9 @@ module Bundesstrasse
       end
 
       it 'returns a list of all parts of a multipart message' do
-        parts = %w[hello world !]
-        zmq_socket.stub(:recv_strings) { |list| list.replace(parts); 0 }
+        parts = %w[hello world !].to_enum
+        zmq_socket.stub(:has_receive_more).and_return(true,true,false)
+        zmq_socket.stub(:recv_str) { parts.next }
         subject.read_multipart.should == %w[hello world !]
       end
     end
@@ -116,7 +106,8 @@ module Bundesstrasse
       end
 
       it 'sends a list of strings as a multipart message' do
-        zmq_socket.should_receive(:send_strings).with(['hello', 'world']).and_return(0)
+        zmq_socket.should_receive(:send_more).with('hello').and_return(true)
+        zmq_socket.should_receive(:send).with('world').and_return(true)
         subject.write_multipart('hello', 'world')
       end
     end
@@ -127,9 +118,9 @@ module Bundesstrasse
       end
 
       it 'forwards the call to the socket' do
-        zmq_socket.stub(:more_parts?).and_return(true)
+        zmq_socket.stub(:has_receive_more).and_return(true)
         subject.more_parts?.should be_true
-        zmq_socket.stub(:more_parts?).and_return(false)
+        zmq_socket.stub(:has_receive_more).and_return(false)
         subject.more_parts?.should be_false
       end
     end

@@ -1,10 +1,11 @@
 
 module Bundesstrasse
   class Context
-    include Errors
+    include JZMQErrors
 
     def initialize(zmq_context)
       @zmq_context = zmq_context
+      @terminated = java.util.concurrent.atomic.AtomicBoolean.new(false)
     end
 
     def socket(socket_class, options={})
@@ -16,16 +17,17 @@ module Bundesstrasse
     end
 
     def terminate!
-      @zmq_context.terminate
+      @zmq_context.term
+      @terminated.get_and_set(true)
       true
     end
 
     def terminated?
-      @zmq_context.context.nil?
+      @terminated.get
     end
 
     def self.create(options={})
-      new ZMQ::Context.create(options[:io_threads] || 1)
+      new JZMQ::ZMQ.context(options[:io_threads] || 1)
     end
   end
 
