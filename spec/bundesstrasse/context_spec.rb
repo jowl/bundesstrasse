@@ -36,11 +36,6 @@ module Bundesstrasse
         subject.socket(:pub)
       end
 
-      it 'creates an instance of the specified socket type, when the type is an uppercase symbol' do
-        zmq_context.should_receive(:socket).with(ZMQ::PUB).and_return(zmq_socket)
-        subject.socket(:PUB)
-      end
-
       it 'creates an instance of the specified socket type, when the type is encoded in the method name' do
         zmq_context.should_receive(:socket).with(ZMQ::PUB).and_return(zmq_socket)
         subject.pub_socket
