@@ -43,6 +43,14 @@ module Bundesstrasse
       return type unless type.is_a?(Symbol)
       SYMBOLIC_TYPES_LOW.index(type) || SYMBOLIC_TYPES_HIGH.index(type)
     end
+
+    public
+
+    SYMBOLIC_TYPES_LOW.each do |type|
+      define_method("#{type}_socket") do |options={}|
+        socket(type, options)
+      end
+    end
   end
 
   ContextError = Class.new(ZMQError)
