@@ -3,13 +3,10 @@ require 'spec_helper'
 module Bundesstrasse
   describe Context do
 
-    let(:type) { 1 }
+    let(:type) { ZMQ::REQ }
     let(:socket) { double('socket') }
-    let(:socket_class) do
-      double('socket_class').tap { |s| s.stub(new: socket, type: type) }
-    end
 
-    let(:zmq_socket) { double('socket') }
+    let(:zmq_socket) { double('zmq_socket') }
     let(:zmq_context) do
       double('context').tap do |s|
         s.stub(socket: zmq_socket, context: true)
@@ -22,22 +19,34 @@ module Bundesstrasse
     describe '#socket' do
       it 'raises ContextError if context has been terminated' do
         subject.terminate!
-        expect { subject.socket(socket_class) }.to raise_error(ContextError)
+        expect { subject.socket(type) }.to raise_error(ContextError)
       end
 
       it 'raises ContextError if unable to create socket' do
         zmq_context.stub(socket: nil)
-        expect { subject.socket(socket_class) }.to raise_error(ContextError)
+        expect { subject.socket(type) }.to raise_error(ContextError)
       end
 
       it 'creates an instance of the provided socket class' do
-        socket_class.should_receive(:new).with(zmq_socket, anything).and_return(socket)
-        subject.socket(socket_class)
+        zmq_context.should_receive(:socket).with(type).and_return(zmq_socket)
+        subject.socket(type)
       end
 
-      it 'uses #type on socket class to determine ZMQ socket' do
-        zmq_context.should_receive(:socket).with(type)
-        subject.socket(socket_class)
+      it 'wraps the ZMQ socket in a Bundesstrasse socket' do
+        zmq_context.stub(:socket).with(type).and_return(zmq_socket)
+        zmq_socket.should_receive(:connect).with('test').and_return(0)
+        wrapper_socket = subject.socket(type)
+        wrapper_socket.connect('test')
+      end
+
+      %w[SUB XSUB].each do |sub_type|
+        it "wraps #{sub_type} sockets in a special wrapper that has helpers for #subscribe and #unsubscribe" do
+          socket_type = ZMQ.const_get(sub_type)
+          zmq_context.stub(:socket).with(socket_type).and_return(zmq_socket)
+          wrapper_socket = subject.socket(socket_type)
+          wrapper_socket.should respond_to(:subscribe)
+          wrapper_socket.should respond_to(:unsubscribe)
+        end
       end
     end
 

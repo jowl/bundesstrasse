@@ -7,10 +7,15 @@ module Bundesstrasse
       @zmq_context = zmq_context
     end
 
-    def socket(socket_class, options={})
-      raise ContextError.new("Context terminated") if terminated?
-      zmq_socket = error_check { @zmq_context.socket(socket_class.type) }
-      socket = socket_class.new(zmq_socket, options)
+    def socket(socket_type, options={})
+      raise ContextError, 'Context terminated' if terminated?
+      zmq_socket = error_check { @zmq_context.socket(socket_type) }
+      case socket_type
+      when ZMQ::SUB, ZMQ::XSUB
+        SubSocket.new(zmq_socket, options)
+      else
+        Socket.new(zmq_socket, options)
+      end
     rescue ZMQError => e
       ContextError.raise_error(e)
     end
