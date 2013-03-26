@@ -155,12 +155,6 @@ module Bundesstrasse
         expect { subject.close! }.not_to raise_error
       end
     end
-
-    describe '.type' do
-      it 'raises NotImplementedError unless overridden' do
-        expect { described_class.type }.to raise_error(NotImplementedError)
-      end
-    end
   end
 
   describe SubSocket do

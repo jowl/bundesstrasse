@@ -61,10 +61,6 @@ module Bundesstrasse
       @connected
     end
 
-    def self.type
-      raise NotImplementedError, 'Subclasses must override Socket::type'
-    end
-
     private
 
     def connected_error_check(&block)
