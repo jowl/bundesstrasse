@@ -21,7 +21,7 @@ class SubscriberAwarePublisher
   def initialize(context, bind_address)
     # We're using an xpub socket, unlike regular pub sockets you can get some
     # information about subscribers from them
-    @pub_socket = context.socket(ZMQ::XPUB)
+    @pub_socket = context.socket(:xpub)
     @pub_socket.bind(bind_address)
     @subscriptions = Set.new
   end
@@ -118,7 +118,7 @@ end
     # number of subscribers at any time, or none.
 
     loop do
-      sub_socket = context.socket(ZMQ::SUB)
+      sub_socket = context.socket(:sub)
       sub_socket.connect("tcp://localhost:#{service_port}")
       # just to complicate things, we randomly subscribe to a specific topic or
       # all topics (an empty string means all topics) -- in this example all

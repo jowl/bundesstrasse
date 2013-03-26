@@ -3,7 +3,6 @@ require 'spec_helper'
 module Bundesstrasse
   describe Context do
 
-    let(:type) { ZMQ::REQ }
     let(:socket) { double('socket') }
 
     let(:zmq_socket) { double('zmq_socket') }
@@ -19,23 +18,33 @@ module Bundesstrasse
     describe '#socket' do
       it 'raises ContextError if context has been terminated' do
         subject.terminate!
-        expect { subject.socket(type) }.to raise_error(ContextError)
+        expect { subject.socket(ZMQ::REQ) }.to raise_error(ContextError)
       end
 
       it 'raises ContextError if unable to create socket' do
         zmq_context.stub(socket: nil)
-        expect { subject.socket(type) }.to raise_error(ContextError)
+        expect { subject.socket(ZMQ::REQ) }.to raise_error(ContextError)
       end
 
-      it 'creates an instance of the provided socket class' do
-        zmq_context.should_receive(:socket).with(type).and_return(zmq_socket)
-        subject.socket(type)
+      it 'creates an instance of the specified socket type, when the type is a ZMQ constant' do
+        zmq_context.should_receive(:socket).with(ZMQ::REQ).and_return(zmq_socket)
+        subject.socket(ZMQ::REQ)
+      end
+
+      it 'creates an instance of the specified socket type, when the type is a symbol' do
+        zmq_context.should_receive(:socket).with(ZMQ::PUB).and_return(zmq_socket)
+        subject.socket(:pub)
+      end
+
+      it 'creates an instance of the specified socket type, when the type is an uppercase symbol' do
+        zmq_context.should_receive(:socket).with(ZMQ::PUB).and_return(zmq_socket)
+        subject.socket(:PUB)
       end
 
       it 'wraps the ZMQ socket in a Bundesstrasse socket' do
-        zmq_context.stub(:socket).with(type).and_return(zmq_socket)
+        zmq_context.stub(:socket).with(ZMQ::REQ).and_return(zmq_socket)
         zmq_socket.should_receive(:connect).with('test').and_return(0)
-        wrapper_socket = subject.socket(type)
+        wrapper_socket = subject.socket(ZMQ::REQ)
         wrapper_socket.connect('test')
       end
 
