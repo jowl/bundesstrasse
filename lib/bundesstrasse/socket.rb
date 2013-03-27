@@ -60,10 +60,6 @@ module Bundesstrasse
       @connected
     end
 
-    def self.type
-      raise NotImplementedError, 'Subclasses must override Socket::type'
-    end
-
     private
 
     def connected_error_check(&block)
@@ -89,6 +85,16 @@ module Bundesstrasse
           raise ArgumentError, "Unknown socket option '#{option}'", e.backtrace
         end
       end
+    end
+  end
+
+  class SubSocket < Socket
+    def subscribe(topic)
+      error_check { @socket.setsockopt(ZMQ::SUBSCRIBE, topic) }
+    end
+
+    def unsubscribe(topic)
+      error_check { @socket.setsockopt(ZMQ::UNSUBSCRIBE, topic) }
     end
   end
 

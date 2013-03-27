@@ -12,9 +12,9 @@ require 'bundesstrasse'
 mutex = Mutex.new
 context = Bundesstrasse::Context.create
 
-rep_socket = context.socket(Bundesstrasse::RepSocket)
+rep_socket = context.rep_socket
 rep_socket.bind('inproc://poll-example')
-req_socket = context.socket(Bundesstrasse::ReqSocket)
+req_socket = context.req_socket
 req_socket.connect('inproc://poll-example')
 
 poller = ZMQ::Poller.new
