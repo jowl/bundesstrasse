@@ -7,7 +7,7 @@ require 'bundesstrasse/version'
 namespace :release do
   task :tag do
     version_string = "v#{Bundesstrasse::VERSION}"
-    unless %x(git tag -l).include?(version_string)
+    unless %x(git tag -l).split("\n").include?(version_string)
       system %(git tag -a #{version_string} -m #{version_string})
     end
     system %(git push && git push --tags)
