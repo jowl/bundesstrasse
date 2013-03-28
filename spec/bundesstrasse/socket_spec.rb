@@ -50,19 +50,19 @@ module Bundesstrasse
           end
 
           it 'raises AgainError when resource is temporarily unavailable' do
-            subject.stub(errno: 35)
+            subject.stub(errno: ZMQ::EAGAIN)
             zmq_socket.stub(zmq_method => -1)
             expect { subject.send(method, '') }.to raise_error(AgainError)
           end
 
           it 'raises TermError when context is terminated' do
-            subject.stub(errno: 156384765)
+            subject.stub(errno: ZMQ::ETERM)
             zmq_socket.stub(zmq_method => -1)
             expect { subject.send(method, '') }.to raise_error(TermError)
           end
 
           it 'closes socket when context is terminated' do
-            subject.stub(errno: 156384765)
+            subject.stub(errno: ZMQ::ETERM)
             zmq_socket.stub(zmq_method => -1)
             zmq_socket.should_receive(:close)
             expect { subject.send(method, '') }.to raise_error(TermError)
