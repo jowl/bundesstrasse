@@ -55,6 +55,7 @@ class SubscriberAwarePublisher
       # counter for each subscription and decrement it for each unsubscription,
       # but here we also keep track of the topics subscribed to as a set.
       message = @pub_socket.read_nonblocking
+      break unless message # this means that there were no more messages
       code = message.slice!(0)
       case code.ord
       when 0
@@ -63,8 +64,6 @@ class SubscriberAwarePublisher
         @subscriptions << message
       end
     end
-  rescue Bundesstrasse::AgainError
-    # this means that there were no more messages
   end
 end
 

@@ -1,6 +1,6 @@
 module Bundesstrasse
   class Socket
-    include JZMQErrors
+    include Errors
 
     def initialize(socket, options={})
       @socket = socket
@@ -18,12 +18,12 @@ module Bundesstrasse
 
     def close!
       error_check { @socket.close }
-      !(@connected = false)
+      @connected = false
+      true
     end
 
     def read(buffer='')
       connected_error_check { buffer.replace(@socket.recv_str) }
-      buffer
     end
 
     def write(message)
@@ -31,8 +31,10 @@ module Bundesstrasse
     end
 
     def read_nonblocking(buffer='')
-      connected_error_check { buffer.replace(@socket.recv_str(JZMQ::ZMQ::NOBLOCK)) }
-      buffer
+      connected_error_check do
+        data = @socket.recv_str(JZMQ::ZMQ::NOBLOCK)
+        data && buffer.replace(data)
+      end
     end
 
     def write_nonblocking(message)

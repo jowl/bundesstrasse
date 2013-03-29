@@ -2,17 +2,17 @@
 module Bundesstrasse
   class Device
     include Errors
-    
+
     attr_reader :frontend, :backend
-    def initialize(type, frontend, backend)
-      @type = type
+    def initialize(device, frontend, backend)
+      @device = device
       @frontend = frontend
       @backend = backend
     end
-    
+
     def start
       error_check do
-        ZMQ::LibZMQ.zmq_device(@type, @frontend.pointer, @backend.pointer)
+        @device.run
       end
     end
 
@@ -27,7 +27,7 @@ module Bundesstrasse
       super
     rescue ZMQError => e
       case e.error_code
-      when ZMQ::ETERM then close!
+      when JZMQ::ZMQ.ETERM then close!
       else DeviceError.raise_error(e)
       end
     end

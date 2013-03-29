@@ -57,6 +57,12 @@ module Bundesstrasse
       end
     end
 
+    describe '#context' do
+      it 'exposes the wrapped context' do
+        subject.context.should == zmq_context
+      end
+    end
+
     describe '.create' do
       it 'creates a context from an actual ZMQ context' do
         JZMQ::ZMQ.should_receive(:context).and_call_original

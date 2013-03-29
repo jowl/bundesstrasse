@@ -1,7 +1,7 @@
 
 module Bundesstrasse
   class Context
-    include JZMQErrors
+    include Errors
 
     def initialize(zmq_context)
       @zmq_context = zmq_context
@@ -14,6 +14,10 @@ module Bundesstrasse
       socket = socket_class.new(zmq_socket, options)
     rescue ZMQError => e
       ContextError.raise_error(e)
+    end
+
+    def context
+      @zmq_context
     end
 
     def terminate!
