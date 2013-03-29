@@ -12,8 +12,6 @@ Gem::Specification.new do |s|
   s.summary     = 'A thin wrapper around ffi-rzmq, providing basic functionality'
   s.description = 'Basic ZeroMQ wrapper for JRuby'
 
-  s.add_dependency 'ffi-rzmq'
-
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'rake'
 

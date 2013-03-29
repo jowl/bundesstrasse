@@ -1,9 +1,3 @@
-require 'ffi-rzmq'
-
-module Bundesstrasse
-  Poller = ZMQ::Poller
-end
-
 require 'bundesstrasse/jzmq'
 require 'bundesstrasse/errors'
 require 'bundesstrasse/context'
