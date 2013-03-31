@@ -28,7 +28,7 @@ Thread.start do
   # The subscribers can subscribe either to all greetings, or just to those for
   # a specific language.
 
-  pub_socket = context.socket(Bundesstrasse::PubSocket)
+  pub_socket = context.pub_socket
   pub_socket.bind('tcp://*:3333')
 
   loop do
@@ -49,7 +49,7 @@ Thread.start do
   # read all of the parts too. The first part is the routing key (the language)
   # and the second is the actual message (the greeting).
 
-  sub_socket = context.socket(Bundesstrasse::SubSocket)
+  sub_socket = context.sub_socket
   sub_socket.connect('tcp://localhost:3333')
   sub_socket.subscribe('')
 
@@ -66,7 +66,7 @@ Thread.start do
 
   # This subscriber will subscribe only to greetings in french or spanish.
 
-  sub_socket = context.socket(Bundesstrasse::SubSocket)
+  sub_socket = context.sub_socket
   sub_socket.connect('tcp://localhost:3333')
   sub_socket.subscribe('french')
   sub_socket.subscribe('spanish')

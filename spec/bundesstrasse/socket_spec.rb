@@ -155,10 +155,43 @@ module Bundesstrasse
         expect { subject.close! }.not_to raise_error
       end
     end
+  end
 
-    describe '.type' do
-      it 'raises NotImplementedError unless overridden' do
-        expect { described_class.type }.to raise_error(NotImplementedError)
+  describe SubSocket do
+    let :zmq_socket do
+      stub(:zmq_socket)
+    end
+
+    let :socket do
+      described_class.new(zmq_socket)
+    end
+
+    before do
+      zmq_socket.stub(:connect).and_return(0)
+      socket.connect('test://bogus')
+    end
+
+    describe '#subscribe' do
+      it 'sets the subscribe option on the socket' do
+        zmq_socket.should_receive(:setsockopt).with(ZMQ::SUBSCRIBE, 'giraffes').and_return(0)
+        socket.subscribe('giraffes')
+      end
+
+      it 'raises errors when the socket returns errors' do
+        zmq_socket.stub(:setsockopt).and_return(-1)
+        expect { socket.subscribe('giraffes') }.to raise_error
+      end
+    end
+
+    describe '#unsubscribe' do
+      it 'sets the unsubscribe option on the socket' do
+        zmq_socket.should_receive(:setsockopt).with(ZMQ::UNSUBSCRIBE, 'giraffes').and_return(0)
+        socket.unsubscribe('giraffes')
+      end
+
+      it 'raises errors when the socket returns errors' do
+        zmq_socket.stub(:setsockopt).and_return(-1)
+        expect { socket.unsubscribe('giraffes') }.to raise_error
       end
     end
   end
