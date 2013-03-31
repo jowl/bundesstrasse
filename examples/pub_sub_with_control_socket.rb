@@ -62,16 +62,16 @@ context = Bundesstrasse::Context.create
 # order, when you're using inproc sockets it's easy to get it wrong and #connect
 # before you #bind.
 
-pub_socket = context.socket(Bundesstrasse::PubSocket)
+pub_socket = context.socket(:pub)
 pub_socket.bind("tcp://*:#{COUNTRIES_PUBSUB_PORT}")
 
-push_socket = context.socket(Bundesstrasse::PushSocket)
+push_socket = context.socket(:push)
 push_socket.bind(COMMAND_ADDRESS)
 
-sub_socket = context.socket(Bundesstrasse::SubSocket)
+sub_socket = context.socket(:sub)
 sub_socket.connect("tcp://localhost:#{COUNTRIES_PUBSUB_PORT}")
 
-pull_socket = context.socket(Bundesstrasse::PullSocket)
+pull_socket = context.socket(:pull)
 pull_socket.connect(COMMAND_ADDRESS)
 
 Thread.start do
