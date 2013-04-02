@@ -17,7 +17,7 @@ class Client
   end
 
   def connect!(address)
-    @socket ||= @context.socket(Bundesstrasse::ReqSocket)
+    @socket ||= @context.req_socket
     @socket.connect(address)
   end
 
@@ -37,7 +37,7 @@ class Server
   end
 
   def start
-    socket = @context.socket(Bundesstrasse::RepSocket)
+    socket = @context.rep_socket
     socket.bind('tcp://*:5678')
     loop do
       msg = socket.read
@@ -73,7 +73,7 @@ require 'bundesstrasse'
 
 ctx = Bundesstrasse::Context.create
 thread = Thread.new do
-  req = ctx.socket(Bundesstrasse::ReqSocket)
+  req = ctx.socket_req
   req.connect('tcp://127.0.0.1:5678')
   puts "Welcome"
   loop do
@@ -92,7 +92,7 @@ require 'bundesstrasse'
 
 ctx = Bundesstrasse::Context.create
 thread = Thread.new do
-  rep = ctx.socket(Bundesstrasse::RepSocket)
+  rep = ctx.rep_socket
   rep.connect('tcp://*:5678')
   puts "Welcome"
   loop do
