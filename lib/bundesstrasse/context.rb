@@ -10,9 +10,9 @@ module Bundesstrasse
     def socket(socket_type, options={})
       raise ContextError, 'Context terminated' if terminated?
       socket_type = translate_socket_type(socket_type)
-      zmq_socket = error_check { @zmq_context.socket(socket_type) }
+      zmq_socket = error_check { ZMQ::Socket.new(@zmq_context, socket_type) }
       case socket_type
-      when ZMQ::SUB, ZMQ::XSUB
+      when LibZMQ::SOCKET_TYPES[:sub], LibZMQ::SOCKET_TYPES[:xsub]
         SubSocket.new(zmq_socket, options)
       else
         Socket.new(zmq_socket, options)
@@ -22,30 +22,33 @@ module Bundesstrasse
     end
 
     def terminate!
-      @zmq_context.terminate
+      LibZMQ.zmq_ctx_destroy(@zmq_context)
+      @zmq_context = nil
       true
     end
 
     def terminated?
-      @zmq_context.context.nil?
+      @zmq_context.nil? || @zmq_context.null?
     end
 
     def self.create(options={})
-      new ZMQ::Context.create(options[:io_threads] || 1)
+      zmq_context = LibZMQ.zmq_ctx_new
+      options.each do |option, value|
+        LibZMQ.zmq_ctx_set(pointer, option, value)
+      end
+      new(zmq_context)
     end
 
     private
 
-    SYMBOLIC_TYPES  = [:pair, :pub, :sub, :req, :rep, :dealer, :router, :pull, :push, :xpub, :xsub].freeze
-
     def translate_socket_type(type)
       return type unless type.is_a?(Symbol)
-      SYMBOLIC_TYPES.index(type)
+      LibZMQ::SOCKET_TYPES[type]
     end
 
     public
 
-    SYMBOLIC_TYPES.each do |type|
+    LibZMQ::SOCKET_TYPES.symbols.each do |type|
       define_method("#{type}_socket") do |options={}|
         socket(type, options)
       end

@@ -9,9 +9,10 @@ Gem::Specification.new do |s|
   s.authors     = ['Joel Segerlind']
   s.email       = ['joel@kogito.se']
   s.homepage    = 'https://github.com/jowl/bundesstrasse'
-  s.summary     = 'A thin wrapper around ffi-rzmq, providing basic functionality'
-  s.description = 'Basic ZeroMQ wrapper for JRuby'
+  s.summary     = 'A 0MQ wrapper for Ruby using FFI'
+  s.description = 'A 0MQ wrapper for Ruby using FFI'
 
+  s.add_dependency 'ffi'
   s.add_dependency 'ffi-rzmq'
 
   s.add_development_dependency 'rspec'
