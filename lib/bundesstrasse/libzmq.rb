@@ -98,6 +98,9 @@ module Bundesstrasse
     # attach_function :zmq_msg_move, [], :int, blocking: true
     # attach_function :zmq_msg_set, [], :int, blocking: true
 
+    # Proxy API
+    attach_function :zmq_proxy, [:pointer, :pointer, :pointer], :int, blocking: true
+
     # Misc API
     def self.errno
       FFI.errno
@@ -107,9 +110,9 @@ module Bundesstrasse
     def self.strerror
       zmq_strerror(errno).read_string
     end
+
     # attach_function :zmq_errno, [], :int, blocking: true
     # attach_function :zmq_poll, [], :int, blocking: true
-    # attach_function :zmq_proxy, [], :int, blocking: true
     # attach_function :zmq_version, [], :int, blocking: true
 
     # Deprecated API

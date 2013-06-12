@@ -2,17 +2,16 @@
 module Bundesstrasse
   class Device
     include Errors
-    
+
     attr_reader :frontend, :backend
-    def initialize(type, frontend, backend)
-      @type = type
+    def initialize(frontend, backend)
       @frontend = frontend
       @backend = backend
     end
-    
+
     def start
       error_check do
-        ZMQ::LibZMQ.zmq_device(@type, @frontend.pointer, @backend.pointer)
+        LibZMQ.zmq_proxy(@frontend.pointer, @backend.pointer, nil)
       end
     end
 

@@ -3,20 +3,19 @@ require 'spec_helper'
 module Bundesstrasse
   describe Device do
 
-    let(:type) { 1 }
     let(:frontend) { double('socket').tap { |s| s.stub(pointer: :pointer, close!: 0) } }
     let(:backend) { double('socket').tap { |s| s.stub(pointer: :pointer, close!: 0) } }
 
-    subject { described_class.new(type, frontend, backend) }
+    subject { described_class.new(frontend, backend) }
 
     describe '#start' do
       before do
         LibZMQ.stub(errno: 156384765)
-        ZMQ::LibZMQ.stub(zmq_device: -1)
+        LibZMQ.stub(zmq_proxy: -1)
       end
 
       it 'starts device using libzmq#zmq_device' do
-        ZMQ::LibZMQ.should_receive(:zmq_device).with(type, :pointer, :pointer).and_return(-1)
+        LibZMQ.should_receive(:zmq_proxy).with(:pointer, :pointer, nil).and_return(-1)
         subject.start
       end
 
