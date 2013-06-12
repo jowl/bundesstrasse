@@ -8,16 +8,16 @@ module Bundesstrasse
 
     def self.raise_error(e)
       raise new(e.message, e.error_code)
-    end
+     end
   end
 
   module Errors
     def errno
-      ZMQ::Util.errno
+      LibZMQ.errno
     end
 
     def error_string
-      ZMQ::Util.error_string
+      LibZMQ.strerror
     end
 
     def error_check(&block)

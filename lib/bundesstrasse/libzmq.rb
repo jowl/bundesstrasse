@@ -8,7 +8,7 @@ module Bundesstrasse
 
     # Constants
     SOCKET_TYPES = enum :socket_type,      [:pair, :pub, :sub, :req, :rep, :dealer, :router, :pull, :push, :xpub, :xsub]
-    enum :socket_option,    [:affinity, 4, :identity, :subscribe, :unsubscribe, :rate, :recovery_ivl, :sndbuf, 11, :rcvbuf, :rcvmore, :fd, :events, :type, :linger, :reconnect_ivl, :backlog, :reconnect_ivl_max, 21, :maxmsgsize, :sndhwm, :rcvhwm, :multicast_hops, :rcvtimeo, 27, :sndtimeo, 31, :last_endpoint, :router_mandatory, :tcp_keepalive, :tcp_keepalive_cnt, :tcp_keepalive_idle, :tcp_keepalive_intvl, :tcp_accept_filter, :immediate, :xpub_verbose, :router_raw, :ipv6, :mechanism, :plain_server, :plain_username, :plain_password, :curve_server, :curve_publickey, :curve_serverkey, :probe]
+    enum :socket_option,    [:affinity, 4, :identity, :subscribe, :unsubscribe, :rate, :recovery_ivl, :sndbuf, 11, :rcvbuf, :rcvmore, :fd, :events, :type, :linger, :reconnect_ivl, :backlog, :reconnect_ivl_max, 21, :maxmsgsize, :sndhwm, :rcvhwm, :multicast_hops, :rcvtimeo, 27, :sndtimeo, :ipv4only, 31, :last_endpoint, :router_mandatory, :tcp_keepalive, :tcp_keepalive_cnt, :tcp_keepalive_idle, :tcp_keepalive_intvl, :tcp_accept_filter, :immediate, :xpub_verbose, :router_raw, :ipv6, :mechanism, :plain_server, :plain_username, :plain_password, :curve_server, :curve_publickey, :curve_serverkey, :probe]
     enum :context_option,   [:io_threads, 1, :max_sockets]
     enum :send_recv_option, [:null, :dontwait, :sndmore]
 
@@ -24,7 +24,7 @@ module Bundesstrasse
     end
 
     def self.zmq_setsockopt_string(socket, socket_option, value)
-      option_value = FFI::MemoryPointer.new 255, 1, true
+      option_value = FFI::MemoryPointer.new value.bytesize, 1, true
       option_value.write_string value
       zmq_setsockopt(socket, socket_option, option_value, value.bytesize)
     end
@@ -99,8 +99,15 @@ module Bundesstrasse
     # attach_function :zmq_msg_set, [], :int, blocking: true
 
     # Misc API
+    def self.errno
+      FFI.errno
+    end
+
+    attach_function :zmq_strerror, [:int], :pointer, blocking: true
+    def self.strerror
+      zmq_strerror(errno).read_string
+    end
     # attach_function :zmq_errno, [], :int, blocking: true
-    # attach_function :zmq_strerror, [], :int, blocking: true
     # attach_function :zmq_poll, [], :int, blocking: true
     # attach_function :zmq_proxy, [], :int, blocking: true
     # attach_function :zmq_version, [], :int, blocking: true

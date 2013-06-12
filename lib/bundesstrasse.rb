@@ -4,7 +4,7 @@ module Bundesstrasse
   Poller = ZMQ::Poller
 end
 
-require 'libzmq'
+require 'bundesstrasse/libzmq'
 require 'bundesstrasse/errors'
 require 'bundesstrasse/context'
 require 'bundesstrasse/socket'

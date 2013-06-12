@@ -9,6 +9,7 @@ GEM
   remote: https://rubygems.org/
   specs:
     diff-lcs (1.1.3)
+    ffi (1.8.1)
     ffi (1.8.1-java)
     ffi-rzmq (1.0.1)
       ffi
@@ -24,6 +25,7 @@ GEM
 
 PLATFORMS
   java
+  ruby
 
 DEPENDENCIES
   bundesstrasse!

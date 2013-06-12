@@ -8,51 +8,83 @@ module Bundesstrasse
     end
 
     def bind(address)
-      @connected = error_check { @socket.bind(address) }
+      @connected = error_check { LibZMQ.zmq_bind(@socket, address) }
     end
 
     def connect(address)
-      @connected = error_check { @socket.connect(address) }
+      @connected = error_check { LibZMQ.zmq_connect(@socket, address) }
     end
 
     def close!
-      !(@connected = !error_check { @socket.close })
+      !(@connected = !error_check { LibZMQ.zmq_close(@socket) })
     end
 
     def read(buffer='')
-      connected_error_check { @socket.recv_string buffer }
+      LibZMQ.zmq_msg do |msg|
+        connected_error_check { LibZMQ.zmq_msg_recv(msg, @socket, :null) }
+        buffer.replace(LibZMQ.zmq_msg_string(msg))
+      end
       buffer
     end
 
-    def write(message)
-      connected_error_check { @socket.send_string(message) }
+    def write(payload)
+      LibZMQ.zmq_msg(payload) do |msg|
+        connected_error_check { LibZMQ.zmq_msg_send(msg, @socket, :null) }
+      end
     end
 
     def read_nonblocking(buffer='')
-      connected_error_check { @socket.recv_string(buffer, ZMQ::NonBlocking) }
+      LibZMQ.zmq_msg do |msg|
+        connected_error_check { LibZMQ.zmq_msg_recv(msg, @socket, :dontwait) }
+        buffer.replace(LibZMQ.zmq_msg_string(msg))
+      end
       buffer
     end
 
-    def write_nonblocking(message)
-      connected_error_check { @socket.send_string(message, ZMQ::NonBlocking) }
+    def write_nonblocking(payload)
+      LibZMQ.zmq_msg(payload) do |msg|
+        connected_error_check { LibZMQ.zmq_msg_send(msg, @socket, :dontwait) }
+      end
     end
 
     def read_multipart
       messages = []
-      connected_error_check { @socket.recv_strings(messages) }
+      LibZMQ.zmq_msg do |msg|
+        begin
+          connected_error_check { LibZMQ.zmq_msg_recv(msg, @socket, :null) }
+          messages << LibZMQ.zmq_msg_string(msg)
+        end until LibZMQ.zmq_msg_more(msg).zero?
+      end
       messages
     end
 
     def write_multipart(*parts)
-      connected_error_check { @socket.send_strings(parts) }
+      parts.each_with_index do |part, i|
+        send_option = i < parts.size - 1 ? :sndmore : :null
+        LibZMQ.zmq_msg(part) do |msg|
+          connected_error_check { LibZMQ.zmq_msg_send(msg, @socket, send_option) }
+        end
+      end
     end
 
     def more_parts?
-      @socket.more_parts?
+      @rcvmore_option_value ||= FFI::MemoryPointer.new :int
+      @rcvmore_option_len ||= FFI::MemoryPointer.new(:size_t).tap { |p| p.write_int(@rcvmore_option_value.size) }
+      error_check { LibZMQ.zmq_getsockopt(socket, :rcvmore, @rcvmore_option_value, @rcvmore_option_len) }
+      @rcvmore_option_value.read_int > 0
+    end
+
+    def type
+      @type ||= begin
+        type_option_value = FFI::MemoryPointer.new :int
+        type_option_len = FFI::MemoryPointer.new(:size_t).tap { |p| p.write_int(type_option_value.size) }
+        error_check { LibZMQ.zmq_getsockopt(socket, :type, type_option_value, type_option_len) }
+        LibZMQ::SOCKET_TYPES[type_option_value.read_int]
+      end
     end
 
     def pointer
-      @socket.socket
+      @socket
     end
     alias_method :socket, :pointer
 
@@ -79,22 +111,26 @@ module Bundesstrasse
 
     def setup!(options)
       options.each do |option, value|
-        begin
-          error_check { @socket.setsockopt ZMQ.const_get(option.upcase), value }
-        rescue NameError => e
-          raise ArgumentError, "Unknown socket option '#{option}'", e.backtrace
-        end
+        error_check { LibZMQ.setsockopt(@socket, option, value) }
       end
     end
   end
 
   class SubSocket < Socket
     def subscribe(topic)
-      error_check { @socket.setsockopt(ZMQ::SUBSCRIBE, topic) }
+      setopt(:subscribe, topic)
     end
 
     def unsubscribe(topic)
-      error_check { @socket.setsockopt(ZMQ::UNSUBSCRIBE, topic) }
+      setopt(:unsubscribe, topic)
+    end
+
+    private
+
+    def setopt(option, value)
+      @option_value ||= FFI::MemoryPointer.new 255
+      @option_value.write_string(value)
+      error_check { LibZMQ.zmq_setsockopt(socket, option, @option_value, value.bytesize) }
     end
   end
 

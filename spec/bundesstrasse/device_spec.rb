@@ -11,7 +11,7 @@ module Bundesstrasse
 
     describe '#start' do
       before do
-        ZMQ::Util.stub(errno: 156384765)
+        LibZMQ.stub(errno: 156384765)
         ZMQ::LibZMQ.stub(zmq_device: -1)
       end
 
@@ -26,7 +26,7 @@ module Bundesstrasse
       end
 
       it 'raises DeviceError on unexpected termination' do
-        ZMQ::Util.stub(errno: -1)
+        LibZMQ.stub(errno: 0)
         expect { subject.start }.to raise_error(DeviceError)
       end
     end
