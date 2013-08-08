@@ -102,10 +102,10 @@ Thread.start do
   # messages, but we could also use #register_writable if we were instead
   # interested in them being available for writing (if we wanted to make sure
   # that we don't write if a socket's buffer is full -- that it has reached its
-  # high water mark -- for example). You can also use #register, which means
-  # both readable and writable.
-  poller.register_readable(sub_socket)
-  poller.register_readable(pull_socket)
+  # high water mark -- for example). You can also use #register without
+  # arguments, which means both readable and writable.
+  poller.register(sub_socket, :pollin)
+  poller.register(pull_socket, :pollin)
 
   topics = Set.new
 
@@ -115,29 +115,30 @@ Thread.start do
     # even if there are no sockets available. That feature can be useful if you
     # sometimes -- a very basic example would be that you want to print a status
     # message from time to time, and messages are rare.
-    poller.poll
+    accessibles = poller.poll
 
-    # When Poller#poll unblocks we check its #readables property, which is an
-    # array of the sockets that have waiting messages. Since we want to do very
-    # different things depending on which socket it is we just check each socket
-    # if it's in that array, and act if it is. Notice that it's not an 
-    # if-else-if case, both sockets can be readable at the same time (and 
-    # actually, a socket could have more than one message available, but we
-    # don't handle that here -- if you run the example for long enough you can
-    # actually see this in action: sometimes the text "No longer listening for
-    # countries" will be printed, but then a couple of countries follow before
-    # the next "Now listening for...". Just because we unsubscribe does not mean
-    # that messages that had already arrived are discarded -- there is a way to
-    # resolve this issue by reading all messages available, but that is left
-    # as an exercise, hint: it has to do with nonblocking reads).
+    # Poller#poll returns an Poller::Accessibles object, which has a #readables
+    # property, which is an array of the sockets that have waiting
+    # messages. Since we want to do very different things depending on which
+    # socket it is we just check each socket if it's in that array, and act if
+    # it is. Notice that it's not an if-else-if case, both sockets can be
+    # readable at the same time (and actually, a socket could have more than one
+    # message available, but we don't handle that here -- if you run the example
+    # for long enough you can actually see this in action: sometimes the text
+    # "No longer listening for countries" will be printed, but then a couple of
+    # countries follow before the next "Now listening for...". Just because we
+    # unsubscribe does not mean that messages that had already arrived are
+    # discarded -- there is a way to resolve this issue by reading all messages
+    # available, but that is left as an exercise, hint: it has to do with
+    # nonblocking reads).
 
-    if poller.readables.include?(sub_socket)
+    if accessibles.readables.include?(sub_socket)
       # When the sub socket gets messages we just want to print them to stdout.
       topic, message = sub_socket.read_multipart
       puts "#{message} is a country in #{topic}"
     end
 
-    if poller.readables.include?(pull_socket)
+    if accessibles.readables.include?(pull_socket)
       # When the command socket gets a message we check which command it is,
       # here we support two commands: subscribe and unsubscribe. In the first
       # case we call #subscribe on the sub socket (it could be that we already

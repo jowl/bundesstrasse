@@ -17,15 +17,15 @@ rep_socket.bind('inproc://poll-example')
 req_socket = context.req_socket
 req_socket.connect('inproc://poll-example')
 
-poller = ZMQ::Poller.new
+poller = Bundesstrasse::Poller.new
 poller.register(req_socket)
 poller.register(rep_socket)
 
 last_request = nil
 
 loop do
-  poller.poll
-  poller.readables.each do |socket|
+  accessibles = poller.poll
+  accessibles.readables.each do |socket|
     case socket
     when rep_socket
       last_request = socket.read
@@ -35,7 +35,7 @@ loop do
       puts("Client received: #{response}")
     end
   end
-  poller.writables.each do |socket|
+  accessibles.writables.each do |socket|
     case socket
     when rep_socket
       response = last_request.reverse
