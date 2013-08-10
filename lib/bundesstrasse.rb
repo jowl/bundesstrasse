@@ -1,5 +1,3 @@
-require 'ffi-rzmq'
-
 require 'bundesstrasse/libzmq'
 require 'bundesstrasse/errors'
 require 'bundesstrasse/context'

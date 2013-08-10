@@ -3,7 +3,6 @@ PATH
   specs:
     bundesstrasse (0.1.0)
       ffi
-      ffi-rzmq
 
 GEM
   remote: https://rubygems.org/
@@ -11,8 +10,6 @@ GEM
     diff-lcs (1.1.3)
     ffi (1.8.1)
     ffi (1.8.1-java)
-    ffi-rzmq (1.0.1)
-      ffi
     rake (10.0.3)
     rspec (2.12.0)
       rspec-core (~> 2.12.0)

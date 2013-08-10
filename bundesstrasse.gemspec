@@ -13,7 +13,6 @@ Gem::Specification.new do |s|
   s.description = 'A 0MQ wrapper for Ruby using FFI'
 
   s.add_dependency 'ffi'
-  s.add_dependency 'ffi-rzmq'
 
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'rake'
