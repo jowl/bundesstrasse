@@ -26,7 +26,7 @@ module Bundesstrasse
       super
     rescue ZMQError => e
       case e.error_code
-      when ZMQ::ETERM then close!
+      when LibZMQ::NATIVE_ERRORS[:eterm] then close!
       else DeviceError.raise_error(e)
       end
     end

@@ -103,8 +103,8 @@ module Bundesstrasse
       super
     rescue ZMQError => e
       case e.error_code
-      when ZMQ::ETERM then close! && TermError.raise_error(e)
-      when ZMQ::EAGAIN then AgainError.raise_error(e)
+      when LibZMQ::NATIVE_ERRORS[:eterm] then close! && TermError.raise_error(e)
+      when Errno::EAGAIN::Errno then AgainError.raise_error(e)
       else SocketError.raise_error(e)
       end
     end

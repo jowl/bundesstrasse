@@ -14,6 +14,10 @@ module Bundesstrasse
 
     SOCKOPT_TYPES = { affinity: :long, backlog: :int, identity: :string, immediate: :int, ipv4only: :int, ipv6: :int, last_endpoint: :string, linger: :int, maxmsgsize: :long, mechanism: :int, multicast_hops: :int, plain_password: :string, plain_server: :int, plain_username: :string, rate: :int, rcvbuf: :int, rcvhwm: :int, rcvtimeo: :int, reconnect_ivl: :int, reconnect_ivl_max: :int, recovery_ivl: :int, sndbuf: :int, sndhwm: :int, sndtimeo: :int, tcp_accept_filter: :string, tcp_keepalive: :int, tcp_keepalive_cnt: :int, tcp_keepalive_idle: :int, tcp_keepalive_intvl: :int, type: :int }
 
+    HAUSNUMERO = 156384712
+
+    NATIVE_ERRORS = enum :native_errors, [:efsm, HAUSNUMERO + 51, :enocompatproto, :eterm, :emthread]
+
     def self.setsockopt(socket, socket_option, value)
       case SOCKOPT_TYPES[socket_option]
       when :int then zmq_setsockopt_int(socket, socket_option, value)
