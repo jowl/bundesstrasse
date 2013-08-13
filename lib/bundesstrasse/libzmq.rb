@@ -1,25 +1,73 @@
 require 'ffi'
 
 module Bundesstrasse
+  module SocketOptionDsl
+    SocketOption = Struct.new(:name, :num, :type)
+
+    def sockopt(name, num, type)
+      @sockopts ||= Hash.new { |_,k| raise ArgumentError, "Unknown socket option: #{k}" }
+      @sockopts[name] = SocketOption.new(name, num, type)
+    end
+
+    def sockopts
+      @sockopts
+    end
+  end
+
   module LibZMQ
     extend FFI::Library
+    extend SocketOptionDsl
 
     ffi_lib 'libzmq'
 
     # Constants
     SOCKET_TYPES = enum :socket_type,      [:pair, :pub, :sub, :req, :rep, :dealer, :router, :pull, :push, :xpub, :xsub]
-    enum :socket_option,    [:affinity, 4, :identity, :subscribe, :unsubscribe, :rate, :recovery_ivl, :sndbuf, 11, :rcvbuf, :rcvmore, :fd, :events, :type, :linger, :reconnect_ivl, :backlog, :reconnect_ivl_max, 21, :maxmsgsize, :sndhwm, :rcvhwm, :multicast_hops, :rcvtimeo, 27, :sndtimeo, :ipv4only, 31, :last_endpoint, :router_mandatory, :tcp_keepalive, :tcp_keepalive_cnt, :tcp_keepalive_idle, :tcp_keepalive_intvl, :tcp_accept_filter, :immediate, :xpub_verbose, :router_raw, :ipv6, :mechanism, :plain_server, :plain_username, :plain_password, :curve_server, :curve_publickey, :curve_serverkey, :probe]
-    enum :context_option,   [:io_threads, 1, :max_sockets]
+    enum :ctxopt,   [:io_threads, 1, :max_sockets]
     enum :send_recv_option, [:null, :dontwait, :sndmore]
 
-    SOCKOPT_TYPES = { affinity: :long, backlog: :int, identity: :string, immediate: :int, ipv4only: :int, ipv6: :int, last_endpoint: :string, linger: :int, maxmsgsize: :long, mechanism: :int, multicast_hops: :int, plain_password: :string, plain_server: :int, plain_username: :string, rate: :int, rcvbuf: :int, rcvhwm: :int, rcvtimeo: :int, reconnect_ivl: :int, reconnect_ivl_max: :int, recovery_ivl: :int, sndbuf: :int, sndhwm: :int, sndtimeo: :int, tcp_accept_filter: :string, tcp_keepalive: :int, tcp_keepalive_cnt: :int, tcp_keepalive_idle: :int, tcp_keepalive_intvl: :int, type: :int }
+    sockopt :affinity,                 4,  :ulong_long # set get
+    sockopt :identity,                 5,  :bytes      # set get
+    sockopt :subscribe,                6,  :bytes      # set
+    sockopt :unsubscribe,              7,  :bytes      # set
+    sockopt :rate,                     8,  :int        # set get
+    sockopt :recovery_ivl,             9,  :int        # set get
+    sockopt :sndbuf,                   11, :int        # set get
+    sockopt :rcvbuf,                   12, :int        # set get
+    sockopt :rcvmore,                  13, :int        #     get
+    sockopt :fd,                       14, :int        #     get
+    sockopt :events,                   15, :int        #     get
+    sockopt :type,                     16, :int        #     get
+    sockopt :linger,                   17, :int        # set get
+    sockopt :reconnect_ivl,            18, :int        # set get
+    sockopt :backlog,                  19, :int        # set get
+    sockopt :reconnect_ivl_max,        21, :int        # set get
+    sockopt :maxmsgsize,               22, :long_long  # set get
+    sockopt :sndhwm,                   23, :int        # set get
+    sockopt :rcvhwm,                   24, :int        # set get
+    sockopt :multicast_hops,           25, :int        # set get
+    sockopt :rcvtimeo,                 27, :int        # set get
+    sockopt :sndtimeo,                 28, :int        # set get
+    sockopt :ipv4only,                 31, :int        # set get
+    sockopt :last_endpoint,            32, :string     #     get
+    sockopt :router_mandatory,         33, :int        # set
+    sockopt :tcp_keepalive,            34, :int        # set get
+    sockopt :tcp_keepalive_cnt,        35, :int        # set get
+    sockopt :tcp_keepalive_idle,       36, :int        # set get
+    sockopt :tcp_keepalive_intvl,      37, :int        # set get
+    sockopt :tcp_accept_filter,        38, :bytes      # set
+    sockopt :delay_attach_on_connect,  39, :int        # set get
+    sockopt :xpub_verbose,             40, :int        # set
+
+    enum :sockopt, sockopts.values.flat_map { |sockopt| [sockopt.name, sockopt.num] }
 
     HAUSNUMERO = 156384712
 
     NATIVE_ERRORS = enum :native_errors, [:efsm, HAUSNUMERO + 51, :enocompatproto, :eterm, :emthread]
 
+    ZMQ_MSG_T = 32
+
     def self.setsockopt(socket, socket_option, value)
-      case SOCKOPT_TYPES[socket_option]
+      case sockopts[socket_option].type
       when :int then zmq_setsockopt_int(socket, socket_option, value)
       when :long then zmq_setsockopt_long(socket, socket_option, value)
       when :string then zmq_setsockopt_string(socket, socket_option, value)
@@ -46,20 +94,20 @@ module Bundesstrasse
     end
 
     # Context API
-    attach_function :zmq_ctx_destroy, [:pointer],                        :int,     blocking: true
-    attach_function :zmq_ctx_get,     [:pointer, :context_option],       :int,     blocking: true
-    attach_function :zmq_ctx_new,     [],                                :pointer, blocking: true
-    attach_function :zmq_ctx_set,     [:pointer, :context_option, :int], :int,     blocking: true
+    attach_function :zmq_ctx_destroy, [:pointer],                :int,     blocking: true
+    attach_function :zmq_ctx_get,     [:pointer, :ctxopt],       :int,     blocking: true
+    attach_function :zmq_ctx_new,     [],                        :pointer, blocking: true
+    attach_function :zmq_ctx_set,     [:pointer, :ctxopt, :int], :int,     blocking: true
+    attach_function :zmq_socket,      [:pointer, :socket_type],  :pointer, blocking: true
 
     # Socket API
-    attach_function :zmq_socket,     [:pointer, :socket_type],                       :pointer, blocking: true
-    attach_function :zmq_bind,       [:pointer, :string],                            :int,     blocking: true
-    attach_function :zmq_connect,    [:pointer, :string],                            :int,     blocking: true
-    attach_function :zmq_getsockopt, [:pointer, :socket_option, :pointer, :pointer], :int,     blocking: true
-    attach_function :zmq_setsockopt, [:pointer, :socket_option, :pointer, :size_t],  :int,     blocking: true
-    attach_function :zmq_close,      [:pointer],                                     :int,     blocking: true
-    attach_function :zmq_disconnect, [:pointer, :string],                            :int,     blocking: true
-    attach_function :zmq_unbind,     [:pointer, :string],                            :int,     blocking: true
+    attach_function :zmq_bind,       [:pointer, :string],                      :int,     blocking: true
+    attach_function :zmq_connect,    [:pointer, :string],                      :int,     blocking: true
+    attach_function :zmq_getsockopt, [:pointer, :sockopt, :pointer, :pointer], :int,     blocking: true
+    attach_function :zmq_setsockopt, [:pointer, :sockopt, :pointer, :size_t],  :int,     blocking: true
+    attach_function :zmq_close,      [:pointer],                               :int,     blocking: true
+    attach_function :zmq_disconnect, [:pointer, :string],                      :int,     blocking: true
+    attach_function :zmq_unbind,     [:pointer, :string],                      :int,     blocking: true
 
     # attach_function :zmq_recv, [:pointer, :pointer, :size_t, :int], :int, blocking: true
     # attach_function :zmq_send, [:pointer, :pointer, :size_t, :int], :int, blocking: true
@@ -68,7 +116,7 @@ module Bundesstrasse
     # Message API
     attach_function :zmq_msg_close,     [:pointer],                                        :int,     blocking: true
     attach_function :zmq_msg_init,      [:pointer],                                        :int,     blocking: true
-    attach_function :zmq_msg_init_data, [:pointer, :pointer, :size_t, :pointer, :pointer], :int,     blocking: true
+#    attach_function :zmq_msg_init_data, [:pointer, :pointer, :size_t, :pointer, :pointer], :int,     blocking: true
     attach_function :zmq_msg_init_size, [:pointer, :size_t],                               :int,     blocking: true
     attach_function :zmq_msg_data,      [:pointer],                                        :pointer, blocking: true
     attach_function :zmq_msg_recv,      [:pointer, :pointer, :send_recv_option],           :int,     blocking: true
@@ -98,7 +146,6 @@ module Bundesstrasse
 
     # attach_function :zmq_msg_copy, [], :int, blocking: true
     # attach_function :zmq_msg_get, [], :int, blocking: true
-    # attach_function :zmq_msg_more, [], :int, blocking: true
     # attach_function :zmq_msg_move, [], :int, blocking: true
     # attach_function :zmq_msg_set, [], :int, blocking: true
 
