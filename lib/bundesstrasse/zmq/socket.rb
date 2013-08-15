@@ -1,3 +1,5 @@
+require 'bundesstrasse/zmq/pointers'
+
 module Bundesstrasse
   module ZMQ
     class Socket
