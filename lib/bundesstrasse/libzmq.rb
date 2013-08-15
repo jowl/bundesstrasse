@@ -166,53 +166,6 @@ module Bundesstrasse
 
     EVENT_FLAGS = enum :poll_flags, [:pollin, 1, :pollout, :pollerr, 4]
 
-    class PollItem < FFI::Struct
-      layout :socket,  :pointer,
-             :fd,      :int,
-             :events,  :short,
-             :revents, :short
-
-      def socket
-        self[:socket]
-      end
-
-      def socket=(socket)
-        self[:socket] = socket
-      end
-
-      def fd
-        self[:fd]
-      end
-
-      def fd=(fd)
-        self[:fd] = fd
-      end
-
-      def events
-        self[:events]
-      end
-
-      def events=(events)
-        self[:events] = events
-      end
-
-      def readable?
-        (self[:revents] & EVENT_FLAGS[:pollin]) > 0
-      end
-
-      def writable?
-        (self[:revents] & EVENT_FLAGS[:pollout]) > 0
-      end
-    end
-
-    def self.create_poll_items(poll_items)
-      pointer = FFI::MemoryPointer.new(LibZMQ::PollItem.size, poll_items.size, true)
-      poll_items.each_with_index do |poll_item, i|
-        pointer.put_bytes(i*poll_item.size, poll_item.pointer.read_bytes(poll_item.size), 0, poll_item.size)
-      end
-      pointer
-    end
-
     # attach_function :zmq_errno, [], :int, blocking: true
     # attach_function :zmq_version, [], :int, blocking: true
 
