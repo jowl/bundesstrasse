@@ -4,6 +4,7 @@ module Bundesstrasse
   module ZMQ
     class Socket
       include ErrorHandling
+      include Helpers
 
       attr_reader :pointer
       def initialize(pointer)
@@ -33,14 +34,14 @@ module Bundesstrasse
         check_rc { LibZMQ.zmq_setsockopt(@pointer, option_name, option_value_pointer.address, option_value_pointer.size) }
       end
 
-      def send(data, flags=:null)
+      def send(data, *flags)
         buffer = create_pointer(:bytes, data)
-        check_rc { LibZMQ.zmq_send(@pointer, buffer.address, buffer.size, flags) }
+        check_rc { LibZMQ.zmq_send(@pointer, buffer.address, buffer.size, send_recv_opts(flags)) }
       end
 
-      def recv(len, flags=:null)
+      def recv(len, *flags)
         buffer = FFI::MemoryPointer.new(len, 1, true)
-        check_rc { LibZMQ.zmq_recv(@pointer, buffer, len, flags) }
+        check_rc { LibZMQ.zmq_recv(@pointer, buffer, len, send_recv_opts(flags)) }
         buffer.read_bytes(len)
       end
 

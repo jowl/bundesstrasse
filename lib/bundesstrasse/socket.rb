@@ -21,7 +21,7 @@ module Bundesstrasse
 
     def read(buffer='')
       LibZMQ.zmq_msg do |msg|
-        connected_error_check { LibZMQ.zmq_msg_recv(msg, @socket, :null) }
+        connected_error_check { LibZMQ.zmq_msg_recv(msg, @socket, 0) }
         buffer.replace(LibZMQ.zmq_msg_string(msg))
       end
       buffer
@@ -29,13 +29,13 @@ module Bundesstrasse
 
     def write(payload)
       LibZMQ.zmq_msg(payload) do |msg|
-        connected_error_check { LibZMQ.zmq_msg_send(msg, @socket, :null) }
+        connected_error_check { LibZMQ.zmq_msg_send(msg, @socket, 0) }
       end
     end
 
     def read_nonblocking(buffer='')
       LibZMQ.zmq_msg do |msg|
-        connected_error_check { LibZMQ.zmq_msg_recv(msg, @socket, :dontwait) }
+        connected_error_check { LibZMQ.zmq_msg_recv(msg, @socket, 1) }
         buffer.replace(LibZMQ.zmq_msg_string(msg))
       end
       buffer
@@ -43,7 +43,7 @@ module Bundesstrasse
 
     def write_nonblocking(payload)
       LibZMQ.zmq_msg(payload) do |msg|
-        connected_error_check { LibZMQ.zmq_msg_send(msg, @socket, :dontwait) }
+        connected_error_check { LibZMQ.zmq_msg_send(msg, @socket, 1) }
       end
     end
 
@@ -51,7 +51,7 @@ module Bundesstrasse
       messages = []
       LibZMQ.zmq_msg do |msg|
         begin
-          connected_error_check { LibZMQ.zmq_msg_recv(msg, @socket, :null) }
+          connected_error_check { LibZMQ.zmq_msg_recv(msg, @socket, 0) }
           messages << LibZMQ.zmq_msg_string(msg)
         end until LibZMQ.zmq_msg_more(msg).zero?
       end
@@ -60,7 +60,7 @@ module Bundesstrasse
 
     def write_multipart(*parts)
       parts.each_with_index do |part, i|
-        send_option = i < parts.size - 1 ? :sndmore : :null
+        send_option = i < parts.size - 1 ? 2 : 0
         LibZMQ.zmq_msg(part) do |msg|
           connected_error_check { LibZMQ.zmq_msg_send(msg, @socket, send_option) }
         end

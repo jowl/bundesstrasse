@@ -85,6 +85,17 @@ module Bundesstrasse
           message.more.should == 0
         end
 
+        it 'is possible to receive multipart messages in non-blocking mode' do
+          expect { message.send(sender, :sndmore, :dontwait) }.to raise_error(Errno::EAGAIN)
+          socket.connect(sender.getsockopt(:last_endpoint))
+          message.send(sender, :sndmore, :dontwait)
+          message.send(sender)
+          message.recv(socket)
+          message.more.should == 1
+          message.recv(socket)
+          message.more.should == 0
+        end
+
         it 'replaces old message upon receiving new' do
           socket.connect(sender.getsockopt(:last_endpoint))
           another_message = described_class.new('another payload')
@@ -92,6 +103,10 @@ module Bundesstrasse
           another_message.close
           message.recv(socket)
           message.data.should == 'another payload'
+        end
+
+        it 'raises ArgumentError for unknown send options' do
+          expect { message.recv(socket, :unknown) }.to raise_error(ArgumentError)
         end
 
         it 'raises EAGAIN if in non-blocking mode and there are no available messages' do
@@ -164,6 +179,10 @@ module Bundesstrasse
           message.send(socket)
           message.size.should == 0
           message.data.should == ''
+        end
+
+        it 'raises ArgumentError for unknown send options' do
+          expect { message.send(socket, :unknown) }.to raise_error(ArgumentError)
         end
 
         it 'raises EAGAIN if in non-blocking mode and not able to send' do

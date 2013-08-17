@@ -23,7 +23,8 @@ module Bundesstrasse
     # Constants
     SOCKET_TYPES = enum :socket_type,      [:pair, :pub, :sub, :req, :rep, :dealer, :router, :pull, :push, :xpub, :xsub]
     enum :ctxopt,   [:io_threads, 1, :max_sockets]
-    enum :send_recv_option, [:null, :dontwait, :sndmore]
+    SEND_RECV_OPTS = enum :dontwait, 1, :sndmore
+    EVENT_FLAGS = enum :poll_flags, [:pollin, 1, :pollout, :pollerr, 4]
 
     sockopt :affinity,                 4,  :ulong_long # set get
     sockopt :identity,                 5,  :bytes      # set get
@@ -111,8 +112,8 @@ module Bundesstrasse
 
     # attach_function :zmq_recv, [:pointer, :pointer, :size_t, :int], :int, blocking: true
     # attach_function :zmq_send, [:pointer, :pointer, :size_t, :int], :int, blocking: true
-    attach_function :zmq_recv,       [:pointer, :pointer, :size_t, :send_recv_option], :int, blocking: true
-    attach_function :zmq_send,       [:pointer, :pointer, :size_t, :send_recv_option], :int, blocking: true
+    attach_function :zmq_recv,       [:pointer, :pointer, :size_t, :int],              :int, blocking: true
+    attach_function :zmq_send,       [:pointer, :pointer, :size_t, :int],              :int, blocking: true
     # attach_function :zmq_socket_monitor, [], :int, blocking: true
 
     # Message API
@@ -121,8 +122,8 @@ module Bundesstrasse
 #    attach_function :zmq_msg_init_data, [:pointer, :pointer, :size_t, :pointer, :pointer], :int,     blocking: true
     attach_function :zmq_msg_init_size, [:pointer, :size_t],                               :int,     blocking: true
     attach_function :zmq_msg_data,      [:pointer],                                        :pointer, blocking: true
-    attach_function :zmq_msg_recv,      [:pointer, :pointer, :send_recv_option],           :int,     blocking: true
-    attach_function :zmq_msg_send,      [:pointer, :pointer, :send_recv_option],           :int,     blocking: true
+    attach_function :zmq_msg_recv,      [:pointer, :pointer, :int],                        :int,     blocking: true
+    attach_function :zmq_msg_send,      [:pointer, :pointer, :int],                        :int,     blocking: true
     attach_function :zmq_msg_size,      [:pointer],                                        :int,     blocking: true
     attach_function :zmq_msg_more,      [:pointer],                                        :int,     blocking: true
 
@@ -166,7 +167,6 @@ module Bundesstrasse
 
     attach_function :zmq_poll, [:pointer, :int, :long], :int, blocking: true
 
-    EVENT_FLAGS = enum :poll_flags, [:pollin, 1, :pollout, :pollerr, 4]
 
     # attach_function :zmq_errno, [], :int, blocking: true
     # attach_function :zmq_version, [], :int, blocking: true

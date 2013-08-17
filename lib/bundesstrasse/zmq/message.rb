@@ -2,6 +2,7 @@ module Bundesstrasse
   module ZMQ
     class Message
       include ErrorHandling
+      include Helpers
 
       attr_reader :pointer
       def initialize(data=nil)
@@ -22,16 +23,16 @@ module Bundesstrasse
         data_pointer.read_bytes(size)
       end
 
-      def recv(socket, flags=:null)
-        check_rc { LibZMQ.zmq_msg_recv(@pointer, socket.pointer, flags) }
+      def recv(socket, *flags)
+        check_rc { LibZMQ.zmq_msg_recv(@pointer, socket.pointer, send_recv_opts(flags)) }
       rescue TermError
         close
         socket.close
         raise
       end
 
-      def send(socket, flags=:null)
-        check_rc { LibZMQ.zmq_msg_send(@pointer, socket.pointer, flags) }
+      def send(socket, *flags)
+        check_rc { LibZMQ.zmq_msg_send(@pointer, socket.pointer, send_recv_opts(flags)) }
       rescue TermError
         close
         socket.close

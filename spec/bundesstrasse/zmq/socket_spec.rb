@@ -3,7 +3,7 @@ require 'spec_helper'
 module Bundesstrasse
   module ZMQ
     describe Socket do
-      let :context do
+      let! :context do
         Context.new
       end
 
@@ -146,6 +146,20 @@ module Bundesstrasse
             receiver.getsockopt(:rcvmore).should == 0
           end
 
+          it 'is possible to send multipart messages in non-blocking mode' do
+            expect { socket.send('', :sndmore, :dontwait) }.to raise_error(Errno::EAGAIN)
+            sender.send('hello', :sndmore, :dontwait)
+            sender.send(' world')
+            receiver.recv(5).should == 'hello'
+            receiver.getsockopt(:rcvmore).should == 1
+            receiver.recv(6).should == ' world'
+            receiver.getsockopt(:rcvmore).should == 0
+          end
+
+          it 'raises ArgumentError for unknown send options' do
+            expect { socket.send('', :unknown) }.to raise_error(ArgumentError)
+          end
+
           it 'raises EAGAIN if in non-blocking mode and not able to send' do
             expect { socket.send('', :dontwait) }.to raise_error(Errno::EAGAIN)
           end
@@ -170,6 +184,10 @@ module Bundesstrasse
           it 'receives specified number of bytes' do
             sender.send('hello')
             receiver.recv(3).should == 'hel'
+          end
+
+          it 'raises ArgumentError for unknown recv options' do
+            expect { socket.recv('', :unknown) }.to raise_error(ArgumentError)
           end
 
           it 'raises EAGAIN if in non-blocking mode and there are no available messages' do

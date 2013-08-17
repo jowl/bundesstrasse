@@ -107,7 +107,7 @@ module Bundesstrasse
       end
 
       it 'reads with the nonblocking flag set' do
-        LibZMQ.should_receive(:zmq_msg_recv).with(anything, socket1.pointer, :dontwait).and_return(0)
+        LibZMQ.should_receive(:zmq_msg_recv).with(anything, socket1.pointer, 1).and_return(0)
         socket1.read_nonblocking
       end
 
@@ -123,7 +123,7 @@ module Bundesstrasse
       end
 
       it 'writes with the nonblocking flag set' do
-        LibZMQ.should_receive(:zmq_msg_send).with(anything, socket1.pointer, :dontwait).and_return(0)
+        LibZMQ.should_receive(:zmq_msg_send).with(anything, socket1.pointer, 1).and_return(0)
         socket1.write_nonblocking('foo')
       end
 
