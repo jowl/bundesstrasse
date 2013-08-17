@@ -33,6 +33,17 @@ module Bundesstrasse
         check_rc { LibZMQ.zmq_setsockopt(@pointer, option_name, option_value_pointer.address, option_value_pointer.size) }
       end
 
+      def send(data, flags=:null)
+        buffer = create_pointer(:bytes, data)
+        check_rc { LibZMQ.zmq_send(@pointer, buffer.address, buffer.size, flags) }
+      end
+
+      def recv(len, flags=:null)
+        buffer = FFI::MemoryPointer.new(len, 1, true)
+        check_rc { LibZMQ.zmq_recv(@pointer, buffer, len, flags) }
+        buffer.read_bytes(len)
+      end
+
       def close
         check_rc { LibZMQ.zmq_close(@pointer) }
       end

@@ -113,6 +113,86 @@ module Bundesstrasse
         end
       end
 
+      context 'send and receive' do
+        let :sender do
+          socket.tap do |socket|
+            socket.connect(receiver.getsockopt(:last_endpoint))
+          end
+        end
+
+        let :receiver do
+          receiver = context.socket(:rep).tap do |socket|
+            socket.bind('inproc://send-receive')
+          end
+        end
+
+        after do
+          sender.close rescue nil
+          receiver.close rescue nil
+        end
+
+        describe '#send' do
+          it 'sends string' do
+            sender.send('hello')
+            receiver.recv(5).should == 'hello'
+          end
+
+          it 'is possible to send multipart messages' do
+            sender.send('hello', :sndmore)
+            sender.send(' world')
+            receiver.recv(5).should == 'hello'
+            receiver.getsockopt(:rcvmore).should == 1
+            receiver.recv(6).should == ' world'
+            receiver.getsockopt(:rcvmore).should == 0
+          end
+
+          it 'raises EAGAIN if in non-blocking mode and not able to send' do
+            expect { socket.send('', :dontwait) }.to raise_error(Errno::EAGAIN)
+          end
+
+          it 'raises InvalidStateError when socket is in wrong state' do
+            sender.send('')
+            expect { sender.send('') }.to raise_error(InvalidStateError)
+          end
+
+          it "raises TermError and closes socket if context has been destroyed" do
+            sender # coincidentally connects sender
+            receiver.close
+            t = Thread.new { context.destroy }
+            Thread.pass
+            expect { sender.send('') }.to raise_error(TermError)
+            t.join
+            expect { sender.close }.to raise_error(Errno::ENOTSOCK)
+          end
+        end
+
+        describe '#recv' do
+          it 'receives specified number of bytes' do
+            sender.send('hello')
+            receiver.recv(3).should == 'hel'
+          end
+
+          it 'raises EAGAIN if in non-blocking mode and there are no available messages' do
+            expect { receiver.recv(1, :dontwait) }.to raise_error(Errno::EAGAIN)
+          end
+
+          it 'raises InvalidStateError when socket is in wrong state' do
+            sender.send('')
+            receiver.recv(1)
+            expect { receiver.recv(1) }.to raise_error(InvalidStateError)
+          end
+
+          it "raises TermError and closes socket if context has been destroyed" do
+            sender.close
+            t = Thread.new { context.destroy }
+            Thread.pass
+            expect { receiver.recv(1) }.to raise_error(TermError)
+            t.join
+            expect { receiver.close }.to raise_error(Errno::ENOTSOCK)
+          end
+        end
+      end
+
       describe '#close' do
         it 'closes the socket' do
           socket.close
@@ -125,7 +205,7 @@ module Bundesstrasse
           expect { socket.disconnect('tcp://127.0.0.1:7788') }.to raise_error(Errno::EAGAIN)
         end
 
-        it "doesn't raises error when connected to specified socket" do
+        it "doesn't raise error when connected to specified socket" do
           socket.connect('tcp://127.0.0.1:7788')
           expect { socket.disconnect('tcp://127.0.0.1:7788') }.not_to raise_error
         end
@@ -138,7 +218,7 @@ module Bundesstrasse
           expect { socket.unbind('tcp://0.0.0.0:7788') }.to raise_error(Errno::EAGAIN)
         end
 
-        it "doesn't raises error when connected to specified socket" do
+        it "doesn't raise error when connected to specified socket" do
           socket.bind('tcp://127.0.0.1:7788')
           expect { socket.unbind('tcp://127.0.0.1:7788') }.not_to raise_error
         end

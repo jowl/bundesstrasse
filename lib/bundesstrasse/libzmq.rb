@@ -111,6 +111,8 @@ module Bundesstrasse
 
     # attach_function :zmq_recv, [:pointer, :pointer, :size_t, :int], :int, blocking: true
     # attach_function :zmq_send, [:pointer, :pointer, :size_t, :int], :int, blocking: true
+    attach_function :zmq_recv,       [:pointer, :pointer, :size_t, :send_recv_option], :int, blocking: true
+    attach_function :zmq_send,       [:pointer, :pointer, :size_t, :send_recv_option], :int, blocking: true
     # attach_function :zmq_socket_monitor, [], :int, blocking: true
 
     # Message API
