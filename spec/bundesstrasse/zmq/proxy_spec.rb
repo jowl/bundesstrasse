@@ -20,12 +20,6 @@ module Bundesstrasse
         described_class.new(frontend, backend)
       end
 
-      after do
-        frontend.close rescue nil
-        backend.close rescue nil
-        context.destroy rescue nil
-      end
-
       describe '#start' do
         it 'closes frontend and backend sockets on termination' do
           t = Thread.new { context.destroy }
@@ -34,6 +28,25 @@ module Bundesstrasse
           [frontend, backend].each do |socket|
             expect { socket.close }.to raise_error(Errno::ENOTSOCK)
           end
+          t.join
+        end
+
+        it 'is possible to send messages through proxy' do
+          frontend.bind('inproc://frontend')
+          backend.bind('inproc://backend')
+          t = Thread.new { proxy.start }
+          client = context.socket(:req).tap { |s| s.connect(frontend.getsockopt(:last_endpoint)) }
+          server = context.socket(:rep).tap { |s| s.connect(backend.getsockopt(:last_endpoint)) }
+          request = Message.new('hello')
+          request.send(client)
+          request.recv(server)
+          request.data.should == 'hello'
+          reply = Message.new('world')
+          reply.send(server)
+          reply.recv(client)
+          reply.data.should == 'world'
+          [client, server, request, reply].each(&:close)
+          context.destroy
           t.join
         end
       end
