@@ -18,7 +18,9 @@ module Bundesstrasse
       end
 
       def destroy
-        check_rc { LibZMQ.zmq_ctx_destroy(@pointer) }
+        rc = check_rc { LibZMQ.zmq_ctx_destroy(@pointer) }
+        @pointer = nil
+        rc
       end
 
       def socket(type)

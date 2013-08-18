@@ -8,7 +8,7 @@ module Bundesstrasse
       end
 
       after do
-        context.destroy
+        context.destroy rescue nil
       end
 
       describe '#set/#get' do
@@ -30,6 +30,10 @@ module Bundesstrasse
       end
 
       describe '#destroy' do
+        it 'raises EFAULT if called more than once' do
+          context.destroy
+          expect { context.destroy }.to raise_error(Errno::EFAULT)
+        end
       end
 
       describe '#socket' do

@@ -46,7 +46,9 @@ module Bundesstrasse
       end
 
       def close
-        check_rc { LibZMQ.zmq_close(@pointer) }
+        rc = check_rc { LibZMQ.zmq_close(@pointer) }
+        @pointer = nil
+        rc
       end
 
       def disconnect(endpoint)
