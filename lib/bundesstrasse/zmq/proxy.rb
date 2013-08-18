@@ -3,7 +3,7 @@ module Bundesstrasse
     class Proxy
       include ErrorHandling
 
-      attr_reader :frontend, :backend
+      attr_reader :frontend, :backend, :capture
       def initialize(frontend, backend, capture=nil)
         @frontend = frontend
         @backend = backend
