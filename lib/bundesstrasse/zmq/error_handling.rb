@@ -8,6 +8,8 @@ module Bundesstrasse
     UnknownError = Class.new(ZMQError)
 
     module ErrorHandling
+      private
+
       def check_rc(&block)
         rc = block.call
         raise last_error if rc < 0
@@ -19,8 +21,6 @@ module Bundesstrasse
         raise last_error if res.null?
         res
       end
-
-      private
 
       def last_error
         (NATIVE_ERRORS[errno] || SYSTEM_ERRORS[errno] || UnknownError).new(strerror)
