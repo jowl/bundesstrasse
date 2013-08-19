@@ -15,7 +15,6 @@ Gem::Specification.new do |s|
   s.add_dependency 'ffi'
 
   s.add_development_dependency 'rspec'
-  s.add_development_dependency 'rake'
 
   s.files         = Dir['lib/**/*.rb']
   s.require_paths = %w[lib]
