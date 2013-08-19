@@ -26,6 +26,16 @@ module Bundesstrasse
       end
     end
 
+    let :terminate_context do
+      Thread.new { context.terminate! }
+    end
+
+    after do
+      socket1.close! rescue nil
+      socket2.close! rescue nil
+      terminate_context.join
+    end
+
     subject { described_class.new(zmq_socket) }
 
     describe '#initialize' do
@@ -79,17 +89,20 @@ module Bundesstrasse
             socket = context.pair_socket(rcvtimeo: 0, sndtimeo: 0)
             socket.bind("#{spec_endpoint}_tmp")
             expect { socket.send(method, '') }.to raise_error(AgainError)
+            socket.close!
           end
 
           it 'raises TermError when context is terminated' do
-            Thread.new { context.terminate! }
+            terminate_context
+            Thread.pass
             expect { socket1.send(method, '') }.to raise_error(TermError)
           end
 
           it 'closes socket when context is terminated' do
-            Thread.new { context.terminate! }
-            LibZMQ.should_receive(:zmq_close).with(socket1.pointer).and_call_original
+            terminate_context
+            Thread.pass
             expect { socket1.send(method, '') }.to raise_error(TermError)
+            expect { socket1.send(method, '') }.to raise_error(SocketError, /not connected/i)
           end
 
           it "doesn't always raise error" do
@@ -131,6 +144,7 @@ module Bundesstrasse
         socket = context.pair_socket
         socket.bind("#{spec_endpoint}_tmp")
         expect { socket.write_nonblocking('foo') }.to raise_error(AgainError)
+        socket.close!
       end
     end
 
@@ -156,6 +170,10 @@ module Bundesstrasse
         context.pair_socket
       end
 
+      after do
+        socket.close!
+      end
+
       it 'returns true if bound/connected' do
         socket.bind("#{spec_endpoint}_tmp")
         socket.should be_connected
@@ -173,8 +191,8 @@ module Bundesstrasse
 
       it 'closes the socket' do
         socket.bind("#{spec_endpoint}_tmp")
-        LibZMQ.should_receive(:zmq_close).with(socket.pointer).and_return(0)
         socket.close!
+        expect { socket.read }.to raise_error(SocketError, /not connected/i)
       end
 
       it "doesn't raise error when not connected/bound" do
