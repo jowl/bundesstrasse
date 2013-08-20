@@ -115,7 +115,7 @@ Thread.start do
     # even if there are no sockets available. That feature can be useful if you
     # sometimes -- a very basic example would be that you want to print a status
     # message from time to time, and messages are rare.
-    accessibles = poller.poll
+    readables, _ = poller.poll
 
     # Poller#poll returns an Poller::Accessibles object, which has a #readables
     # property, which is an array of the sockets that have waiting
@@ -132,13 +132,13 @@ Thread.start do
     # available, but that is left as an exercise, hint: it has to do with
     # nonblocking reads).
 
-    if accessibles.readables.include?(sub_socket)
+    if readables.include?(sub_socket)
       # When the sub socket gets messages we just want to print them to stdout.
       topic, message = sub_socket.read_multipart
       puts "#{message} is a country in #{topic}"
     end
 
-    if accessibles.readables.include?(pull_socket)
+    if readables.include?(pull_socket)
       # When the command socket gets a message we check which command it is,
       # here we support two commands: subscribe and unsubscribe. In the first
       # case we call #subscribe on the sub socket (it could be that we already

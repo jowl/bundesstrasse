@@ -124,6 +124,18 @@ module Bundesstrasse
           res.readables.should include(rep_socket)
         end
       end
+
+      describe '#to_ary' do
+        it 'can be splatted in a parallel assignment' do
+          another_req_socket = context.req_socket
+          another_req_socket.connect('inproc://poller_spec')
+          another_req_socket.write('')
+          poller.register(another_req_socket)
+          readables, writables = poller.poll(0)
+          readables.should == [rep_socket]
+          writables.should == [req_socket]
+        end
+      end
     end
   end
 end

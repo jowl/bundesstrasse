@@ -34,6 +34,7 @@ module Bundesstrasse
 
       def initialize(readables, writables)
         @readables, @writables = readables, writables
+        @ary = [@readables, @writables].freeze
       end
 
       def any?
@@ -42,6 +43,10 @@ module Bundesstrasse
 
       def none?
         !any?
+      end
+
+      def to_ary
+        @ary
       end
     end
 
