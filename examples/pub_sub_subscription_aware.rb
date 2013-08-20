@@ -24,6 +24,8 @@ class SubscriberAwarePublisher
     @pub_socket = context.xpub_socket
     @pub_socket.bind(bind_address)
     @subscriptions = Set.new
+    @poller = Bundesstrasse::Poller.new
+    @poller.register(@pub_socket, :pollin)
   end
 
   def has_subscribers?
@@ -42,10 +44,11 @@ class SubscriberAwarePublisher
       # This is the core piece of code to this example. Here we poll the xpub
       # socket for new messages about subscriptions and unsubscriptions.
       #
-      # Read nonblocking until there are no more messages (signalled through a
-      # Bundesstrasse::AgainError). The messages received are prefixed with a
-      # zero byte for unsubscribe or a one for subscribe. The rest of the message
-      # is the topic subscribed to (i.e. the prefix string given to #subscribe).
+      # Read until there are no more messages (detected by polling the socked
+      # and checking if it's readable). The messages received are prefixed with
+      # a zero byte for unsubscribe or a one for subscribe. The rest of the
+      # message is the topic subscribed to (i.e. the prefix string given to
+      # #subscribe).
       #
       # A message will be received for the first subscription for a topic, and
       # for the last unsubscription of a topic. There is no way to count the
@@ -54,17 +57,19 @@ class SubscriberAwarePublisher
       # To determine if we have a subscriber it would be enough to increment a
       # counter for each subscription and decrement it for each unsubscription,
       # but here we also keep track of the topics subscribed to as a set.
-      message = @pub_socket.read_nonblocking
-      code = message.slice!(0)
-      case code.ord
-      when 0
-        @subscriptions.delete(message)
-      when 1
-        @subscriptions << message
+      if @poller.poll(0).readables.any?
+        message = @pub_socket.read
+        code = message.slice!(0)
+        case code.ord
+        when 0
+          @subscriptions.delete(message)
+        when 1
+          @subscriptions << message
+        end
+      else
+        break
       end
     end
-  rescue Bundesstrasse::AgainError
-    # this means that there were no more messages
   end
 end
 
