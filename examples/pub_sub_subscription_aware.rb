@@ -107,7 +107,7 @@ Thread.start do
     else
       mutex.synchronize do
         puts 'No subscribers!'
-     end
+      end
     end
     sleep(1)
   end
