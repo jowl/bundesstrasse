@@ -29,9 +29,15 @@ module Bundesstrasse
       @pollables.delete(pollable)
     end
 
-    class Accessibles < Struct.new(:readables, :writables)
+    class Accessibles
+      attr_reader :readables, :writables
+
+      def initialize(readables, writables)
+        @readables, @writables = readables, writables
+      end
+
       def any?
-        !readables.empty? || !writables.empty?
+        !@readables.empty? || !@writables.empty?
       end
 
       def none?
