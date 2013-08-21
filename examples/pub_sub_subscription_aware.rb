@@ -33,8 +33,16 @@ class SubscriberAwarePublisher
     @subscriptions.size > 0
   end
 
-  def publish(topic, message)
-    @pub_socket.write_multipart(topic, message)
+  def has_subscribers_for?(topic)
+    has_subscribers? && @subscriptions.include?(topic)
+  end
+
+  def has_wildcard_subscriber?
+    has_subscribers? && @subscriptions.include?('')
+  end
+
+  def publish(*parts)
+    @pub_socket.write_multipart(*parts)
   end
 
   private
@@ -73,7 +81,14 @@ class SubscriberAwarePublisher
   end
 end
 
-service_port = 4444
+SERVICE_PORT = 4444
+
+STATUSES = {
+  'eve' => %w[coding shopping studying],
+  'steve' => %w[working shopping running],
+  'phil' => %w[coding cooking sleeping],
+  'gill' => %w[driving studying working],
+}
 
 mutex = Mutex.new
 context = Bundesstrasse::Context.create
@@ -96,17 +111,19 @@ Thread.start do
   # closed down between the publisher checking for unsubscriptions and
   # publishing the next message, but they should be rare.
 
-  publisher = SubscriberAwarePublisher.new(context, "tcp://*:#{service_port}")
+  publisher = SubscriberAwarePublisher.new(context, "tcp://*:#{SERVICE_PORT}")
 
   counter = 0
 
   loop do
-    if publisher.has_subscribers?
-      publisher.publish('greetings', "Hello ##{counter}")
-      counter += 1
-    else
-      mutex.synchronize do
-        puts 'No subscribers!'
+    STATUSES.each_key do |person|
+      if publisher.has_subscribers_for?(person) || publisher.has_wildcard_subscriber?
+        publisher.publish(person, STATUSES[person].sample, counter.to_s)
+        counter += 1
+      else
+        mutex.synchronize do
+          puts "* No subscriber for #{person} status updates!"
+        end
       end
     end
     sleep(1)
@@ -124,20 +141,19 @@ end
 
     loop do
       sub_socket = context.sub_socket
-      sub_socket.connect("tcp://localhost:#{service_port}")
+      sub_socket.connect("tcp://localhost:#{SERVICE_PORT}")
       # just to complicate things, we randomly subscribe to a specific topic or
-      # all topics (an empty string means all topics) -- in this example all
-      # messages are sent to the topic "greetings" so either way the same
-      # messages will be received
+      # all topics (an empty string means all topics)
       if rand < 0.5
         sub_socket.subscribe('')
       else
-        sub_socket.subscribe('greetings')
+        person = STATUSES.keys.sample
+        sub_socket.subscribe(person)
       end
       3.times do
-        topic, message = sub_socket.read_multipart
+        topic, message, counter = sub_socket.read_multipart
         mutex.synchronize do
-          puts message
+          puts "#{topic}: #{message} (##{counter})"
         end
       end
       # you can unsubscribe manually, but that will also happen when you
