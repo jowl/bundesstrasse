@@ -12,8 +12,9 @@ module Bundesstrasse
         Context.new
       end
 
-      let :file_handle do
-        Tempfile.new('temp')
+      let :io_pipe do
+        require 'socket'
+        IO.pipe.last
       end
 
       let! :rep_socket do
@@ -33,8 +34,7 @@ module Bundesstrasse
       end
 
       after do
-        file_handle.close
-        file_handle.unlink
+        io_pipe.close
         message.close rescue nil
         req_socket.close rescue nil
         rep_socket.close rescue nil
@@ -65,13 +65,9 @@ module Bundesstrasse
         end
 
         it 'is possible to register file handles' do
-          if RUBY_PLATFORM == 'java'
-            pending 'not available for JRuby yet'
-          else
-            poller.register(file_handle)
-            res = poller.poll(0)
-            res.readables.should include(file_handle)
-          end
+          poller.register(io_pipe)
+          res = poller.poll(0)
+          res.writables.should include(io_pipe)
         end
       end
 

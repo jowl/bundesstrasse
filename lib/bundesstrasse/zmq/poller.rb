@@ -60,13 +60,24 @@ module Bundesstrasse
             if pollable.is_a? Socket
               poll_item.socket = pollable.pointer
             else
-              poll_item.fd = pollable.fileno
+              poll_item.fd = fileno(pollable)
             end
             poll_item.events = events
           end
         end
         @dirty = false
         @items = PollItem.create_array(poll_items)
+      end
+
+      if defined?(JRuby)
+        def fileno(io)
+          # The JVM has internal file descriptors, this is to get the real OS file descriptor
+          JRuby.reference(io).open_file.main_stream.descriptor.channel.fd_val
+        end
+      else
+        def fileno(io)
+          io.fileno
+        end
       end
     end
   end
