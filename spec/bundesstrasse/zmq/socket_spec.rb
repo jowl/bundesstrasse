@@ -122,6 +122,7 @@ module Bundesstrasse
 
         let :receiver do
           receiver = context.socket(:rep).tap do |socket|
+            socket.setsockopt(:linger, 0)
             socket.bind('inproc://send-receive')
           end
         end
