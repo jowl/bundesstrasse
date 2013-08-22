@@ -88,7 +88,13 @@ module Bundesstrasse
         it 'is possible to receive multipart messages in non-blocking mode' do
           expect { message.send(sender, :sndmore, :dontwait) }.to raise_error(Errno::EAGAIN)
           socket.connect(sender.getsockopt(:last_endpoint))
-          message.send(sender, :sndmore, :dontwait)
+          t0 = Time.now
+          begin
+            message.send(sender, :sndmore, :dontwait)
+          rescue Errno::EAGAIN
+            retry if Time.now - t0 < 1
+            fail "couldn't send message"
+          end
           message.send(sender)
           message.recv(socket)
           message.more.should == 1
