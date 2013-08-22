@@ -13,8 +13,7 @@ module Bundesstrasse
         readables = []
         writables = []
         unless @pollables.empty?
-          rc = check_rc { LibZMQ.zmq_poll(items, @pollables.size, timeout) }
-          if rc > 0
+          if check_rc { LibZMQ.zmq_poll(items, @pollables.size, timeout) } > 0
             @pollables.each_with_index do |(pollable, _), i|
               poll_item = PollItem.new(items + i * PollItem.size)
               readables << pollable if poll_item.readable?

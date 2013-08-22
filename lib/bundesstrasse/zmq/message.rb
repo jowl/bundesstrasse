@@ -17,6 +17,7 @@ module Bundesstrasse
 
       def close
         check_rc { LibZMQ.zmq_msg_close(@pointer) }
+        nil
       end
 
       def data
@@ -25,6 +26,7 @@ module Bundesstrasse
 
       def recv(socket, *flags)
         check_rc { LibZMQ.zmq_msg_recv(@pointer, socket.pointer, send_recv_opts(flags)) }
+        nil
       rescue TermError
         close
         socket.close
@@ -33,6 +35,7 @@ module Bundesstrasse
 
       def send(socket, *flags)
         check_rc { LibZMQ.zmq_msg_send(@pointer, socket.pointer, send_recv_opts(flags)) }
+        nil
       rescue TermError
         close
         socket.close

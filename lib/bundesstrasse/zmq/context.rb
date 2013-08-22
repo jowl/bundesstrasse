@@ -11,6 +11,7 @@ module Bundesstrasse
 
       def set(option_name, option_value)
         check_rc { LibZMQ.zmq_ctx_set(@pointer, option_name, option_value) }
+        nil
       end
 
       def get(option_name)
@@ -18,13 +19,18 @@ module Bundesstrasse
       end
 
       def destroy
-        rc = check_rc { LibZMQ.zmq_ctx_destroy(@pointer) }
+        check_rc { LibZMQ.zmq_ctx_destroy(@pointer) }
         @pointer = nil
-        rc
       end
 
       def socket(type)
-        Socket.new(check_res { LibZMQ.zmq_socket(@pointer, type) })
+        Socket.new(zmq_socket(type))
+      end
+
+      private
+
+      def zmq_socket(type)
+        check_res { LibZMQ.zmq_socket(@pointer, type) }
       end
     end
   end

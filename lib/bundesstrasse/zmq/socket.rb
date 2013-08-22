@@ -15,10 +15,12 @@ module Bundesstrasse
 
       def bind(endpoint)
         check_rc { LibZMQ.zmq_bind(@pointer, endpoint) }
+        nil
       end
 
       def connect(endpoint)
         check_rc { LibZMQ.zmq_connect(@pointer, endpoint) }
+        nil
       end
 
       def getsockopt(option_name)
@@ -32,11 +34,13 @@ module Bundesstrasse
       def setsockopt(option_name, option_value)
         option_value_pointer = create_pointer(LibZMQ.sockopts[option_name].type, option_value)
         check_rc { LibZMQ.zmq_setsockopt(@pointer, option_name, option_value_pointer.address, option_value_pointer.size) }
+        nil
       end
 
       def send(data, *flags)
         buffer = create_pointer(:bytes, data)
         check_rc { LibZMQ.zmq_send(@pointer, buffer.address, buffer.size, send_recv_opts(flags)) }
+        nil
       end
 
       def recv(len, *flags)
@@ -46,17 +50,18 @@ module Bundesstrasse
       end
 
       def close
-        rc = check_rc { LibZMQ.zmq_close(@pointer) }
+        check_rc { LibZMQ.zmq_close(@pointer) }
         @pointer = nil
-        rc
       end
 
       def disconnect(endpoint)
         check_rc { LibZMQ.zmq_disconnect(@pointer, endpoint) }
+        nil
       end
 
       def unbind(endpoint)
         check_rc { LibZMQ.zmq_unbind(@pointer, endpoint) }
+        nil
       end
 
       private
