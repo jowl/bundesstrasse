@@ -33,6 +33,25 @@ module Bundesstrasse
       end
     end
 
+    describe BooleanPointer do
+      let :pointer do
+        described_class.new(true)
+      end
+
+      describe '#value' do
+        it 'returns the boolean value of the pointer' do
+          pointer.value.should be_true
+        end
+      end
+
+      describe '#value=' do
+        it 'writes the value to the pointer' do
+          pointer.value = false
+          pointer.value.should be_false
+        end
+      end
+    end
+
     describe BytesPointer do
       let :value do
         'value'

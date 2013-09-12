@@ -73,10 +73,10 @@ module Bundesstrasse
         context 'with boolean options' do
           [:ipv4only, :delay_attach_on_connect].each do |option_name|
             it "sets and gets #{option_name}" do
-              socket.setsockopt(option_name, 1)
-              socket.getsockopt(option_name).should == 1
-              socket.setsockopt(option_name, 0)
-              socket.getsockopt(option_name).should == 0
+              socket.setsockopt(option_name, true)
+              socket.getsockopt(option_name).should be_true
+              socket.setsockopt(option_name, false)
+              socket.getsockopt(option_name).should be_false
             end
           end
         end
@@ -142,9 +142,9 @@ module Bundesstrasse
             sender.send('hello', :sndmore)
             sender.send(' world')
             receiver.recv(5).should == 'hello'
-            receiver.getsockopt(:rcvmore).should == 1
+            receiver.getsockopt(:rcvmore).should be_true
             receiver.recv(6).should == ' world'
-            receiver.getsockopt(:rcvmore).should == 0
+            receiver.getsockopt(:rcvmore).should be_false
           end
 
           it 'is possible to send multipart messages in non-blocking mode' do
@@ -152,9 +152,9 @@ module Bundesstrasse
             sender.send('hello', :sndmore, :dontwait)
             sender.send(' world')
             receiver.recv(5).should == 'hello'
-            receiver.getsockopt(:rcvmore).should == 1
+            receiver.getsockopt(:rcvmore).should be_true
             receiver.recv(6).should == ' world'
-            receiver.getsockopt(:rcvmore).should == 0
+            receiver.getsockopt(:rcvmore).should be_false
           end
 
           it 'raises ArgumentError for unknown send options' do

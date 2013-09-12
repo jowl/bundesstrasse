@@ -28,6 +28,20 @@ module Bundesstrasse
       end
     end
 
+    class BooleanPointer < ValuePointer
+      def initialize(val=nil)
+        super(:int, val)
+      end
+
+      def value=(val)
+        super(val ? 1 : 0)
+      end
+
+      def value
+        super == 1
+      end
+    end
+
     class BytesPointer < ValuePointer
       def initialize(val=nil)
         @type = :bytes

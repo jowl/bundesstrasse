@@ -34,7 +34,7 @@ module Bundesstrasse
     sockopt :recovery_ivl,             9,  :int        # set get
     sockopt :sndbuf,                   11, :int        # set get
     sockopt :rcvbuf,                   12, :int        # set get
-    sockopt :rcvmore,                  13, :int        #     get
+    sockopt :rcvmore,                  13, :boolean    #     get
     sockopt :fd,                       14, :int        #     get
     sockopt :events,                   15, :int        #     get
     sockopt :type,                     16, :int        #     get
@@ -48,7 +48,7 @@ module Bundesstrasse
     sockopt :multicast_hops,           25, :int        # set get
     sockopt :rcvtimeo,                 27, :int        # set get
     sockopt :sndtimeo,                 28, :int        # set get
-    sockopt :ipv4only,                 31, :int        # set get
+    sockopt :ipv4only,                 31, :boolean    # set get
     sockopt :last_endpoint,            32, :string     #     get
     sockopt :router_mandatory,         33, :int        # set
     sockopt :tcp_keepalive,            34, :int        # set get
@@ -56,7 +56,7 @@ module Bundesstrasse
     sockopt :tcp_keepalive_idle,       36, :int        # set get
     sockopt :tcp_keepalive_intvl,      37, :int        # set get
     sockopt :tcp_accept_filter,        38, :bytes      # set
-    sockopt :delay_attach_on_connect,  39, :int        # set get
+    sockopt :delay_attach_on_connect,  39, :boolean    # set get
     sockopt :xpub_verbose,             40, :int        # set
 
     enum :sockopt, sockopts.values.flat_map { |sockopt| [sockopt.name, sockopt.num] }

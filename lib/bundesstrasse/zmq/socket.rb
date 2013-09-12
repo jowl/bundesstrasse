@@ -76,6 +76,7 @@ module Bundesstrasse
       def create_pointer(type, val=nil)
         case type
         when :string, :bytes then BytesPointer.new(val)
+        when :boolean then BooleanPointer.new(val)
         else ValuePointer.new(type, val)
         end
       end
