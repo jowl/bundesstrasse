@@ -47,7 +47,7 @@ module Bundesstrasse
       end
 
       def more
-        LibZMQ.zmq_msg_more(@pointer)
+        LibZMQ.zmq_msg_more(@pointer) == 1
       end
 
       private

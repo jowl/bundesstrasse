@@ -80,9 +80,9 @@ module Bundesstrasse
           message.send(sender, :sndmore)
           message.send(sender)
           message.recv(socket)
-          message.more.should == 1
+          message.more.should be_true
           message.recv(socket)
-          message.more.should == 0
+          message.more.should be_false
         end
 
         it 'is possible to receive multipart messages in non-blocking mode' do
@@ -97,9 +97,9 @@ module Bundesstrasse
           end
           message.send(sender)
           message.recv(socket)
-          message.more.should == 1
+          message.more.should be_true
           message.recv(socket)
-          message.more.should == 0
+          message.more.should be_false
         end
 
         it 'replaces old message upon receiving new' do
@@ -177,7 +177,7 @@ module Bundesstrasse
           message.send(socket, :sndmore)
           message.send(socket) # send final part
           message.recv(receiver)
-          message.more.should == 1
+          message.more.should be_true
         end
 
         it 'clears message upon sending it' do
@@ -242,16 +242,16 @@ module Bundesstrasse
           context.destroy
         end
 
-        it 'returns 0 if it is the final (or only) message part' do
-          message.more.should == 0
+        it 'returns false if it is the final (or only) message part' do
+          message.more.should be_false
         end
 
-        it 'returns 1 if there are more message parts left' do
+        it 'returns true if there are more message parts left' do
           sender.connect(receiver.getsockopt(:last_endpoint))
           message.send(sender, :sndmore)
           message.send(sender)
           message.recv(receiver)
-          message.more.should == 1
+          message.more.should be_true
         end
       end
     end
