@@ -50,7 +50,7 @@ module Bundesstrasse
     sockopt :sndtimeo,                 28, :int        # set get
     sockopt :ipv4only,                 31, :boolean    # set get
     sockopt :last_endpoint,            32, :string     #     get
-    sockopt :router_mandatory,         33, :int        # set
+    sockopt :router_mandatory,         33, :boolean    # set
     sockopt :tcp_keepalive,            34, :int        # set get
     sockopt :tcp_keepalive_cnt,        35, :int        # set get
     sockopt :tcp_keepalive_idle,       36, :int        # set get
