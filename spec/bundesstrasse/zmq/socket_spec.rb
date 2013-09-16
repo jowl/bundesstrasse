@@ -134,7 +134,7 @@ module Bundesstrasse
       end
 
       context 'send and receive' do
-        let :sender do
+        let! :sender do
           socket.tap do |socket|
             socket.connect(receiver.getsockopt(:last_endpoint))
           end
@@ -168,7 +168,6 @@ module Bundesstrasse
           end
 
           it 'is possible to send multipart messages in non-blocking mode' do
-            expect { socket.send('', :sndmore, :dontwait) }.to raise_error(Errno::EAGAIN)
             sender.send('hello', :sndmore, :dontwait)
             sender.send(' world')
             receiver.recv(5).should == 'hello'
@@ -178,11 +177,7 @@ module Bundesstrasse
           end
 
           it 'raises ArgumentError for unknown send options' do
-            expect { socket.send('', :unknown) }.to raise_error(ArgumentError)
-          end
-
-          it 'raises EAGAIN if in non-blocking mode and not able to send' do
-            expect { socket.send('', :dontwait) }.to raise_error(Errno::EAGAIN)
+            expect { sender.send('', :unknown) }.to raise_error(ArgumentError)
           end
 
           it 'raises InvalidStateError when socket is in wrong state' do
@@ -191,7 +186,6 @@ module Bundesstrasse
           end
 
           it "raises TermError and closes socket if context has been destroyed" do
-            sender # coincidentally connects sender
             receiver.close
             t = Thread.new { context.destroy }
             Thread.pass
