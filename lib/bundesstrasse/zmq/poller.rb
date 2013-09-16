@@ -21,7 +21,7 @@ module Bundesstrasse
             end
           end
         end
-        Accessibles.new(readables, writables)
+        PollResult.new(readables, writables)
       end
 
       def register(pollable, *events)
@@ -35,7 +35,7 @@ module Bundesstrasse
         @pollables.delete(pollable)
       end
 
-      class Accessibles
+      class PollResult
         attr_reader :readables, :writables
 
         def initialize(readables, writables)
@@ -44,10 +44,6 @@ module Bundesstrasse
 
         def any?
           @readables.any? || @writables.any?
-        end
-
-        def none?
-          !any?
         end
 
         def to_ary

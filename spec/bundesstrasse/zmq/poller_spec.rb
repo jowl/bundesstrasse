@@ -58,7 +58,7 @@ module Bundesstrasse
           res = poller.poll(0)
           res.readables.should include(rep_socket)
           poller.register(rep_socket, :pollout)
-          poller.poll(0).should be_none
+          poller.poll(0).should_not be_any
           message.recv(rep_socket)
           res = poller.poll(0)
           res.writables.should include(rep_socket)
@@ -77,13 +77,13 @@ module Bundesstrasse
           res = poller.poll(0)
           res.writables.should include(req_socket)
           poller.unregister(req_socket)
-          poller.poll(0).should be_none
+          poller.poll(0).should_not be_any
         end
       end
 
       describe '#poll' do
-        it "returns a #{described_class::Accessibles}" do
-          poller.poll(0).should be_a(described_class::Accessibles)
+        it "returns a #{described_class::PollResult}" do
+          poller.poll(0).should be_a(described_class::PollResult)
         end
 
         it 'waits for timeout seconds' do
@@ -95,7 +95,7 @@ module Bundesstrasse
         end
       end
 
-      describe described_class::Accessibles do
+      describe described_class::PollResult do
         before do
           poller.register(rep_socket)
           poller.register(req_socket)
@@ -135,6 +135,14 @@ module Bundesstrasse
             message.send(req_socket)
             res = poller.poll(0)
             res.readables.should include(rep_socket)
+          end
+        end
+
+        describe '#to_ary' do
+          it 'returns readable and writable objects' do
+            readables, writables = poller.poll(0)
+            readables.should be_empty
+            writables.should include(req_socket)
           end
         end
       end
