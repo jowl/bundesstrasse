@@ -26,38 +26,38 @@ module Bundesstrasse
     SEND_RECV_OPTS = enum :dontwait, 1, :sndmore
     EVENT_FLAGS = enum :poll_flags, [:pollin, 1, :pollout, :pollerr, 4]
 
-    sockopt :affinity,                 4,  :ulong_long # set get
-    sockopt :identity,                 5,  :bytes      # set get
-    sockopt :subscribe,                6,  :bytes      # set
-    sockopt :unsubscribe,              7,  :bytes      # set
-    sockopt :rate,                     8,  :int        # set get
-    sockopt :recovery_ivl,             9,  :int        # set get
-    sockopt :sndbuf,                   11, :int        # set get
-    sockopt :rcvbuf,                   12, :int        # set get
-    sockopt :rcvmore,                  13, :boolean    #     get
-    sockopt :fd,                       14, :int        #     get
-    sockopt :events,                   15, :int        #     get
-    sockopt :type,                     16, :int        #     get
-    sockopt :linger,                   17, :int        # set get
-    sockopt :reconnect_ivl,            18, :int        # set get
-    sockopt :backlog,                  19, :int        # set get
-    sockopt :reconnect_ivl_max,        21, :int        # set get
-    sockopt :maxmsgsize,               22, :long_long  # set get
-    sockopt :sndhwm,                   23, :int        # set get
-    sockopt :rcvhwm,                   24, :int        # set get
-    sockopt :multicast_hops,           25, :int        # set get
-    sockopt :rcvtimeo,                 27, :int        # set get
-    sockopt :sndtimeo,                 28, :int        # set get
-    sockopt :ipv4only,                 31, :boolean    # set get
-    sockopt :last_endpoint,            32, :string     #     get
-    sockopt :router_mandatory,         33, :boolean    # set
-    sockopt :tcp_keepalive,            34, :int        # set get
-    sockopt :tcp_keepalive_cnt,        35, :int        # set get
-    sockopt :tcp_keepalive_idle,       36, :int        # set get
-    sockopt :tcp_keepalive_intvl,      37, :int        # set get
-    sockopt :tcp_accept_filter,        38, :bytes      # set
-    sockopt :delay_attach_on_connect,  39, :boolean    # set get
-    sockopt :xpub_verbose,             40, :int        # set
+    sockopt :affinity,                 4,  :ulong_long  # set get
+    sockopt :identity,                 5,  :bytes       # set get
+    sockopt :subscribe,                6,  :bytes       # set
+    sockopt :unsubscribe,              7,  :bytes       # set
+    sockopt :rate,                     8,  :int         # set get
+    sockopt :recovery_ivl,             9,  :time_period # set get
+    sockopt :sndbuf,                   11, :int         # set get
+    sockopt :rcvbuf,                   12, :int         # set get
+    sockopt :rcvmore,                  13, :boolean     #     get
+    sockopt :fd,                       14, :int         #     get
+    sockopt :events,                   15, :int         #     get
+    sockopt :type,                     16, :int         #     get
+    sockopt :linger,                   17, :time_period # set get
+    sockopt :reconnect_ivl,            18, :time_period # set get
+    sockopt :backlog,                  19, :int         # set get
+    sockopt :reconnect_ivl_max,        21, :time_period # set get
+    sockopt :maxmsgsize,               22, :long_long   # set get
+    sockopt :sndhwm,                   23, :int         # set get
+    sockopt :rcvhwm,                   24, :int         # set get
+    sockopt :multicast_hops,           25, :int         # set get
+    sockopt :rcvtimeo,                 27, :time_period # set get
+    sockopt :sndtimeo,                 28, :time_period # set get
+    sockopt :ipv4only,                 31, :boolean     # set get
+    sockopt :last_endpoint,            32, :string      #     get
+    sockopt :router_mandatory,         33, :boolean     # set
+    sockopt :tcp_keepalive,            34, :int         # set get
+    sockopt :tcp_keepalive_cnt,        35, :int         # set get
+    sockopt :tcp_keepalive_idle,       36, :int         # set get
+    sockopt :tcp_keepalive_intvl,      37, :int         # set get
+    sockopt :tcp_accept_filter,        38, :bytes       # set
+    sockopt :delay_attach_on_connect,  39, :boolean     # set get
+    sockopt :xpub_verbose,             40, :int         # set
 
     enum :sockopt, sockopts.values.flat_map { |sockopt| [sockopt.name, sockopt.num] }
 

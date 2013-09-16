@@ -13,7 +13,7 @@ module Bundesstrasse
         readables = []
         writables = []
         unless @pollables.empty?
-          if check_rc { LibZMQ.zmq_poll(items, @pollables.size, timeout) } > 0
+          if check_rc { LibZMQ.zmq_poll(items, @pollables.size, (timeout >= 0 ? (timeout * 1000).round : -1)) } > 0
             @pollables.each_with_index do |(pollable, _), i|
               poll_item = PollItem.new(items + i * PollItem.size)
               readables << pollable if poll_item.readable?
@@ -35,13 +35,23 @@ module Bundesstrasse
         @pollables.delete(pollable)
       end
 
-      class Accessibles < Struct.new(:readables, :writables)
+      class Accessibles
+        attr_reader :readables, :writables
+
+        def initialize(readables, writables)
+          @ary = (@readables, @writables = readables, writables)
+        end
+
         def any?
-          !readables.empty? || !writables.empty?
+          @readables.any? || @writables.any?
         end
 
         def none?
           !any?
+        end
+
+        def to_ary
+          @ary
         end
       end
 
@@ -57,10 +67,10 @@ module Bundesstrasse
         return @items unless @dirty
         poll_items = @pollables.map do |pollable, events|
           PollItem.new.tap do |poll_item|
-            if pollable.is_a? Socket
-              poll_item.socket = pollable.pointer
-            else
+            if pollable.is_a? IO
               poll_item.fd = fileno(pollable)
+            else
+              poll_item.socket = pollable.pointer
             end
             poll_item.events = events
           end

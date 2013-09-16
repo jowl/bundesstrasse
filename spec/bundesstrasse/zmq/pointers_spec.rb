@@ -33,6 +33,34 @@ module Bundesstrasse
       end
     end
 
+    describe TimePointer do
+      let :pointer do
+        described_class.new
+      end
+
+      describe '#value=' do
+        it 'turns fractional seconds into integral milliseconds' do
+          pointer.value = 3.333
+          pointer.address.read_int.should == 3333
+        end
+
+        it 'rounds to nearest millisecond' do
+          pointer.value = 0.0055
+          pointer.value.should == 0.006
+        end
+
+        it 'writes 0 to pointer' do
+          pointer.value = 0
+          pointer.value.should == 0
+        end
+
+        it 'writes -1 to pointer for negative values' do
+          pointer.value = -22.2
+          pointer.value.should == -1
+        end
+      end
+    end
+
     describe BooleanPointer do
       let :pointer do
         described_class.new(true)

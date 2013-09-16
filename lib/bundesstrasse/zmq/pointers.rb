@@ -28,6 +28,21 @@ module Bundesstrasse
       end
     end
 
+    class TimePointer < ValuePointer
+      def initialize(val=nil)
+        super(:int, val)
+      end
+
+      def value=(val)
+        super(val >= 0 ? (val * 1000).round : -1)
+      end
+
+      def value
+        val = super
+        val >= 0 ? val.fdiv(1000) : -1
+      end
+    end
+
     class BooleanPointer < ValuePointer
       def initialize(val=nil)
         super(:int, val)

@@ -77,6 +77,7 @@ module Bundesstrasse
         case type
         when :string, :bytes then BytesPointer.new(val)
         when :boolean then BooleanPointer.new(val)
+        when :time_period then TimePointer.new(val)
         else ValuePointer.new(type, val)
         end
       end

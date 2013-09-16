@@ -82,10 +82,30 @@ module Bundesstrasse
         end
 
         context 'with numerical options' do
-          [:affinity, :rate, :recovery_ivl, :sndbuf, :rcvbuf, :linger, :reconnect_ivl, :backlog, :reconnect_ivl_max, :maxmsgsize, :sndhwm, :rcvhwm, :multicast_hops, :rcvtimeo, :sndtimeo].each do |option_name|
+          [:affinity, :rate, :sndbuf, :rcvbuf, :backlog, :maxmsgsize, :sndhwm, :rcvhwm, :multicast_hops].each do |option_name|
             it "sets and gets #{option_name}" do
               socket.setsockopt(option_name, 101)
               socket.getsockopt(option_name).should == 101
+            end
+          end
+        end
+
+        context 'with time period options' do
+          [:recovery_ivl, :reconnect_ivl_max].each do |option_name|
+            it "sets and gets #{option_name}" do
+              socket.setsockopt(option_name, 10.1)
+              socket.getsockopt(option_name).should == 10.1
+            end
+          end
+
+          context 'that can be negative (indefinite)' do
+            [:linger, :reconnect_ivl, :rcvtimeo, :sndtimeo].each do |option_name|
+              it "sets and gets #{option_name}" do
+                socket.setsockopt(option_name, -10.1)
+                socket.getsockopt(option_name).should == -1
+                socket.setsockopt(option_name, 10.1)
+                socket.getsockopt(option_name).should == 10.1
+              end
             end
           end
         end

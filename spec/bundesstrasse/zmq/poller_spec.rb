@@ -85,6 +85,14 @@ module Bundesstrasse
         it "returns a #{described_class::Accessibles}" do
           poller.poll(0).should be_a(described_class::Accessibles)
         end
+
+        it 'waits for timeout seconds' do
+          timeout = 0.1
+          poller.register(rep_socket)
+          t0 = Time.now
+          poller.poll(timeout)
+          (Time.now - t0).should >= timeout
+        end
       end
 
       describe described_class::Accessibles do
