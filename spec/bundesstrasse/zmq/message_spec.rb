@@ -49,7 +49,7 @@ module Bundesstrasse
           Context.new
         end
 
-        let! :socket do
+        let :socket do
           context.socket(:rep)
         end
 
@@ -145,7 +145,7 @@ module Bundesstrasse
           Context.new
         end
 
-        let! :socket do
+        let :socket do
           context.socket(:req).tap do |socket|
             socket.setsockopt(:linger, 0)
           end
@@ -202,10 +202,18 @@ module Bundesstrasse
         end
 
         it 'raises TermError and closes socket if context has been destroyed' do
+          socket = context.socket(:dealer).tap do |socket|
+            socket.setsockopt(:linger, 0)
+          end
           socket.connect('tcp://127.0.0.1:7788')
           t = Thread.new { context.destroy }
-          Thread.pass
-          expect { message.send(socket) }.to raise_error(TermError)
+          send_loop = proc do
+            t0 = Time.now
+            until Time.now - t0 > 1
+              message.send(socket)
+            end
+          end
+          expect(send_loop).to raise_error(TermError)
           t.join
           expect { socket.close }.to raise_error(Errno::ENOTSOCK)
         end
