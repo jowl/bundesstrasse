@@ -3,11 +3,11 @@ require 'spec_helper'
 module Bundesstrasse
   module ZMQ
     describe Socket do
-      let! :context do
+      let :context do
         Context.new
       end
 
-      let! :socket do
+      let :socket do
         context.socket(:req).tap { |s| s.setsockopt(:linger, 0) }
       end
 
@@ -18,8 +18,9 @@ module Bundesstrasse
 
       def self.term_error(&block)
         it "raises TermError and closes socket if context has been destroyed" do
+          socket
           t = Thread.new { context.destroy }
-          Thread.pass
+          sleep 0.1 # there's no way of nowing when the context destruction has begun
           expect { instance_exec(&block) }.to raise_error(TermError)
           t.join
           expect { socket.close }.to raise_error(Errno::ENOTSOCK)
@@ -134,10 +135,8 @@ module Bundesstrasse
       end
 
       context 'send and receive' do
-        let! :sender do
-          socket.tap do |socket|
-            socket.connect(receiver.getsockopt(:last_endpoint))
-          end
+        let :sender do
+          socket
         end
 
         let :receiver do
@@ -145,6 +144,10 @@ module Bundesstrasse
             socket.setsockopt(:linger, 0)
             socket.bind('inproc://send-receive')
           end
+        end
+
+        before do
+          sender.connect(receiver.getsockopt(:last_endpoint))
         end
 
         after do
@@ -234,12 +237,15 @@ module Bundesstrasse
       end
 
       describe '#disconnect' do
+        before do
+          socket.connect('tcp://127.0.0.1:7788')
+        end
+
         it 'raises EAGAIN when not connected to specified endpoint' do
-          expect { socket.disconnect('tcp://127.0.0.1:7788') }.to raise_error(Errno::EAGAIN)
+          expect { socket.disconnect('tcp://127.0.0.1:7799') }.to raise_error(Errno::EAGAIN)
         end
 
         it "doesn't raise error when connected to specified socket" do
-          socket.connect('tcp://127.0.0.1:7788')
           expect { socket.disconnect('tcp://127.0.0.1:7788') }.not_to raise_error
         end
 
@@ -247,12 +253,15 @@ module Bundesstrasse
       end
 
       describe '#unbind' do
+        before do
+          socket.bind('tcp://127.0.0.1:7788')
+        end
+
         it 'raises EAGAIN when not bound to specified endpoint' do
-          expect { socket.unbind('tcp://0.0.0.0:7788') }.to raise_error(Errno::EAGAIN)
+          expect { socket.unbind('tcp://127.0.0.1:7799') }.to raise_error(Errno::EAGAIN)
         end
 
         it "doesn't raise error when connected to specified socket" do
-          socket.bind('tcp://127.0.0.1:7788')
           expect { socket.unbind('tcp://127.0.0.1:7788') }.not_to raise_error
         end
 
