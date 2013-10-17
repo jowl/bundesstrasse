@@ -2,50 +2,51 @@ require 'spec_helper'
 
 module Bundesstrasse
   describe Context do
+    let :context do
+      described_class.new
+    end
 
-    let(:socket) { double('socket') }
+    after do
+      context.destroy
+    end
 
-    let(:zmq_socket) { double('zmq_socket') }
-
-    subject { described_class.create }
-
-    describe '#socket' do
-      it 'raises ContextError if context has been terminated' do
-        subject.terminate!
-        expect { subject.socket(:req) }.to raise_error(ContextError)
-      end
-
-      it 'raises ContextError if unable to create socket' do
-        LibZMQ.stub(zmq_socket: nil)
-        expect { subject.socket(:req) }.to raise_error(ContextError)
-      end
-
-      it 'creates an instance of the specified socket type, when the type is a constant' do
-        subject.socket(3).type.should == :req
-      end
-
-      it 'creates an instance of the specified socket type, when the type is a symbol' do
-        subject.socket(:pub).type.should == :pub
-      end
-
-      it 'creates an instance of the specified socket type, when the type is encoded in the method name' do
-        subject.sub_socket.type.should == :sub
-      end
-
-      [:sub, :xsub].each do |socket_type|
-        it "wraps #{socket_type} sockets in a special wrapper that has helpers for #subscribe and #unsubscribe" do
-          wrapper_socket = subject.socket(socket_type)
-          wrapper_socket.should respond_to(:subscribe)
-          wrapper_socket.should respond_to(:unsubscribe)
-        end
+    describe '::new' do
+      it 'raises ArgumentError for unknown options' do
+        expect { described_class.new(unknown: 10) }.to raise_error(ArgumentError)
       end
     end
 
-    describe '#terminate!' do
-      it 'terminates ZMQ context' do
-        subject.should_not be_terminated
-        subject.terminate!
-        subject.should be_terminated
+    describe '#destroy' do
+      it 'is idempotent' do
+        3.times { context.destroy }
+        context.should be_destroyed
+      end
+    end
+
+    describe '#destroyed?' do
+      it 'returns true if the context has been destroyed' do
+        context.destroy
+        context.should be_destroyed
+      end
+
+      it "returns false if the context hasn't been destroyed" do
+        context.should_not be_destroyed
+      end
+    end
+
+    ZMQ::LibZMQ::SOCKET_TYPES.symbols.each do |type|
+      describe "##{type}_socket" do
+        it 'returns a Socket' do
+          socket = context.send("#{type}_socket")
+          socket.should be_a(Socket)
+          socket.close
+        end
+
+        it "specifically a #{type} socket" do
+          socket = context.send("#{type}_socket")
+          socket.type.should == type
+          socket.close
+        end
       end
     end
   end
