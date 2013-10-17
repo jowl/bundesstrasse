@@ -2,224 +2,140 @@ require 'spec_helper'
 
 module Bundesstrasse
   describe Socket do
-    let :zmq_socket do
-      double('socket')
-    end
-
-    let! :context do
-      Context.create
-    end
-
-    let :spec_endpoint do
-      'inproc://spec_endpoint'
-    end
-
-    let! :socket1 do
-      context.pair_socket.tap do |socket|
-        socket.bind(spec_endpoint)
-      end
-    end
-
-    let! :socket2 do
-      context.pair_socket.tap do |socket|
-        socket.connect(spec_endpoint)
-      end
-    end
-
-    subject { described_class.new(zmq_socket) }
-
-    describe '#initialize' do
-      it 'sets provided options on ZMQ socket' do
-        LibZMQ.should_receive(:setsockopt).with(zmq_socket, :linger, 0).and_return(0)
-        LibZMQ.should_receive(:setsockopt).with(zmq_socket, :sndbuf, 10).and_return(0)
-        described_class.new(zmq_socket, sndbuf: 10, linger: 0)
-      end
-    end
-
-    describe '#socket' do
-      it 'exposes pointer to ZMQ socket' do
-        subject.pointer.should == zmq_socket
-      end
-    end
-
-    [:bind, :connect].each do |method|
-      describe "##{method}" do
-        before do
-          LibZMQ.stub(errno: 0)
-          LibZMQ.stub(zmq_bind: -1, zmq_connect: -1)
-        end
-
-        it 'raises SocketError on failure' do
-          expect { subject.send(method,'') }.to raise_error(SocketError)
-        end
-      end
-    end
-
-    {read: :zmq_msg_recv, write: :zmq_msg_send}.each do |method, zmq_method|
-      describe "##{method}" do
-        context 'when not connected/bound' do
-          it 'raises SocketError unless connected/bound' do
-            expect { subject.send(method, '') }.to raise_error(SocketError)
-          end
-        end
-
-        context 'when connected/bound' do
-          before do
-            LibZMQ.stub(zmq_connect: 0)
-            subject.connect('')
-          end
-
-          it "raises SocketError when #{zmq_method} fails" do
-            LibZMQ.stub(zmq_method => -1)
-            LibZMQ.stub(errno: 0)
-            expect { subject.send(method, '') }.to raise_error(SocketError)
-          end
-
-          it 'raises AgainError when resource is temporarily unavailable' do
-            socket = context.pair_socket(rcvtimeo: 0, sndtimeo: 0)
-            socket.bind("#{spec_endpoint}_tmp")
-            expect { socket.send(method, '') }.to raise_error(AgainError)
-          end
-
-          it 'raises TermError when context is terminated' do
-            Thread.new { context.terminate! }
-            expect { socket1.send(method, '') }.to raise_error(TermError)
-          end
-
-          it 'closes socket when context is terminated' do
-            Thread.new { context.terminate! }
-            LibZMQ.should_receive(:zmq_close).with(socket1.pointer).and_call_original
-            expect { socket1.send(method, '') }.to raise_error(TermError)
-          end
-
-          it "doesn't always raise error" do
-            socket1.write('')
-            expect { socket2.send(method,'') }.not_to raise_error
-          end
-        end
-      end
-    end
-
-    describe '#read_nonblocking' do
-      before do
-        LibZMQ.stub(zmq_connect: 0)
-        subject.connect('')
-      end
-
-      it 'reads with the nonblocking flag set' do
-        LibZMQ.should_receive(:zmq_msg_recv).with(anything, socket1.pointer, 1).and_return(0)
-        socket1.read_nonblocking
-      end
-
-      it 'raises AgainError if no message' do
-        expect { socket1.read_nonblocking }.to raise_error(AgainError)
-      end
-    end
-
-    describe '#write_nonblocking' do
-      before do
-        LibZMQ.stub(zmq_connect: 0)
-        subject.connect('')
-      end
-
-      it 'writes with the nonblocking flag set' do
-        LibZMQ.should_receive(:zmq_msg_send).with(anything, socket1.pointer, 1).and_return(0)
-        socket1.write_nonblocking('foo')
-      end
-
-      it 'raises AgainError if no receiver' do
-        socket = context.pair_socket
-        socket.bind("#{spec_endpoint}_tmp")
-        expect { socket.write_nonblocking('foo') }.to raise_error(AgainError)
-      end
-    end
-
-    describe '#read/write_multipart' do
-      it 'returns a list of all parts of a multipart message' do
-        socket1.write_multipart('hello', 'world', '!')
-        socket2.read_multipart.should == %w[hello world !]
-      end
-    end
-
-    describe '#more_parts?' do
-      it 'returns true if there are more messages on the wire' do
-        socket1.write_multipart('one','two')
-        socket2.read
-        socket2.more_parts?.should be_true
-        socket2.read
-        socket2.more_parts?.should be_false
-      end
-    end
-
-    describe '#connected?' do
-      let :socket do
-        context.pair_socket
-      end
-
-      it 'returns true if bound/connected' do
-        socket.bind("#{spec_endpoint}_tmp")
-        socket.should be_connected
-      end
-
-      it 'returns false if not bound/connected' do
-        socket.should_not be_connected
-      end
-    end
-
-    describe '#close!' do
-      let :socket do
-        context.pair_socket
-      end
-
-      it 'closes the socket' do
-        socket.bind("#{spec_endpoint}_tmp")
-        LibZMQ.should_receive(:zmq_close).with(socket.pointer).and_return(0)
-        socket.close!
-      end
-
-      it "doesn't raise error when not connected/bound" do
-        expect { socket.close! }.not_to raise_error
-      end
-    end
-  end
-
-  describe SubSocket do
-    let :zmq_socket do
-      stub(:zmq_socket)
+    let :context do
+      Context.new(io_threads: 0)
     end
 
     let :socket do
-      described_class.new(zmq_socket)
+      context.pair_socket
+    end
+
+    let :endpoint do
+      'inproc://socket-spec'
+    end
+
+    let :other_socket do
+      context.pair_socket
     end
 
     before do
-      LibZMQ.stub(zmq_connect: 0)
-      socket.connect('')
+      socket.bind(endpoint)
+      other_socket.connect(endpoint)
     end
 
-    describe '#subscribe' do
-      it 'sets the subscribe option on the socket' do
-        LibZMQ.should_receive(:zmq_setsockopt).with(zmq_socket, :subscribe, anything, anything).and_return(0)
-        socket.subscribe('giraffes')
+    after do
+      socket.close
+      other_socket.close
+      context.destroy
+    end
+
+    describe '::new' do
+      let :zmq_socket do
+        stub(:zmq_socket)
       end
 
-      it 'raises errors when the socket returns errors' do
-        LibZMQ.stub(errno: 0)
-        LibZMQ.stub(zmq_setsockopt: -1)
-        expect { socket.subscribe('giraffes') }.to raise_error(SocketError)
+      it 'sets socket options on provided socket' do
+        zmq_socket.should_receive(:setsockopt).with(:linger, 0)
+        described_class.new(zmq_socket, linger: 0)
       end
     end
 
-    describe '#unsubscribe' do
-      it 'sets the unsubscribe option on the socket' do
-        LibZMQ.should_receive(:zmq_setsockopt).with(zmq_socket, :unsubscribe, anything, anything).and_return(0)
-        socket.unsubscribe('giraffes')
+    describe '#type' do
+      it 'returns the type of the socket as a Symbol' do
+        socket.type.should == :pair
+      end
+    end
+
+    describe '#readable?' do
+      it "returns false when there's nothing to read" do
+        socket.should_not be_readable
       end
 
-      it 'raises errors when the socket returns errors' do
-        LibZMQ.stub(errno: 0)
-        LibZMQ.stub(zmq_setsockopt: -1)
-        expect { socket.unsubscribe('giraffes') }.to raise_error(SocketError)
+      it "returns true when at least one message can be read" do
+        other_socket.send ''
+        socket.should be_readable
+      end
+    end
+
+    describe '#writable?' do
+      it 'returns false when nothing can be sent without blocking' do
+        socket = context.pair_socket
+        socket.should_not be_writable
+        socket.close
+      end
+
+      it 'returns true when something can be sent without blocking' do
+        socket.should be_writable
+      end
+    end
+
+    describe '#recv' do
+      it "raises EAGAIN if there's nothing to read when called with :dontwait" do
+        expect { socket.recv(:dontwait) }.to raise_error(Errno::EAGAIN)
+      end
+    end
+
+    describe '#recv_multipart' do
+      it 'returns all message parts in an Array' do
+        other_socket.send('a', 'b', 'c')
+        socket.recv_multipart.should == %w[a b c]
+      end
+
+      it "raises EAGAIN if there's nothing to read when called with :dontwait" do
+        expect { socket.recv_multipart(:dontwait) }.to raise_error(Errno::EAGAIN)
+      end
+    end
+
+    describe '#send' do
+      it 'sends single string as single message' do
+        socket.send('single')
+        other_socket.recv.should == 'single'
+        other_socket.should_not be_more
+      end
+
+      it 'sends multiple strings as multipart-message' do
+        socket.send('multiple', 'strings')
+        other_socket.recv.should == 'multiple'
+        other_socket.should be_more
+        other_socket.recv.should == 'strings'
+      end
+
+      it "raises EAGAIN if unable to send when called with :dontwait" do
+        socket = context.pair_socket
+        expect { socket.send('', :dontwait) }.to raise_error(Errno::EAGAIN)
+        socket.close
+      end
+    end
+
+    describe '#more?' do
+      it 'returns false if there are no more parts to read' do
+        other_socket.send('')
+        socket.recv
+        socket.should_not be_more
+      end
+
+      it 'returns true if there are more parts to read' do
+        other_socket.send('', '')
+        socket.recv
+        socket.should be_more
+      end
+    end
+
+    describe '#close' do
+      it 'is idempotent' do
+        3.times { socket.close }
+        socket.should be_closed
+      end
+    end
+
+    describe '#closed?' do
+      it "returns false when socket hasn't been closed" do
+        socket.should_not be_closed
+      end
+
+      it 'returns true when socket has been closed' do
+        socket.close
+        socket.should be_closed
       end
     end
   end

@@ -1,140 +1,112 @@
 module Bundesstrasse
   class Socket
-    include Errors
+
+    DEFAULT_OPTIONS = { linger: 0 }
 
     def initialize(socket, options={})
-      @socket = socket
-      setup!(options)
-    end
-
-    def bind(address)
-      @connected = error_check { LibZMQ.zmq_bind(@socket, address) }
-    end
-
-    def connect(address)
-      @connected = error_check { LibZMQ.zmq_connect(@socket, address) }
-    end
-
-    def close!
-      !(@connected = !error_check { LibZMQ.zmq_close(@socket) })
-    end
-
-    def read(buffer='')
-      LibZMQ.zmq_msg do |msg|
-        connected_error_check { LibZMQ.zmq_msg_recv(msg, @socket, 0) }
-        buffer.replace(LibZMQ.zmq_msg_string(msg))
-      end
-      buffer
-    end
-
-    def write(payload)
-      LibZMQ.zmq_msg(payload) do |msg|
-        connected_error_check { LibZMQ.zmq_msg_send(msg, @socket, 0) }
+      @zmq_socket = socket
+      DEFAULT_OPTIONS.merge(options).each do |option_name, option_value|
+        @zmq_socket.setsockopt(option_name, option_value)
       end
     end
 
-    def read_nonblocking(buffer='')
-      LibZMQ.zmq_msg do |msg|
-        connected_error_check { LibZMQ.zmq_msg_recv(msg, @socket, 1) }
-        buffer.replace(LibZMQ.zmq_msg_string(msg))
-      end
-      buffer
+    def connect(endpoint)
+      @zmq_socket.connect(endpoint)
     end
 
-    def write_nonblocking(payload)
-      LibZMQ.zmq_msg(payload) do |msg|
-        connected_error_check { LibZMQ.zmq_msg_send(msg, @socket, 1) }
-      end
-    end
-
-    def read_multipart
-      messages = []
-      LibZMQ.zmq_msg do |msg|
-        begin
-          connected_error_check { LibZMQ.zmq_msg_recv(msg, @socket, 0) }
-          messages << LibZMQ.zmq_msg_string(msg)
-        end until LibZMQ.zmq_msg_more(msg).zero?
-      end
-      messages
-    end
-
-    def write_multipart(*parts)
-      parts.each_with_index do |part, i|
-        send_option = i < parts.size - 1 ? 2 : 0
-        LibZMQ.zmq_msg(part) do |msg|
-          connected_error_check { LibZMQ.zmq_msg_send(msg, @socket, send_option) }
-        end
-      end
-    end
-
-    def more_parts?
-      @rcvmore_option_value ||= FFI::MemoryPointer.new :int
-      @rcvmore_option_len ||= FFI::MemoryPointer.new(:size_t).tap { |p| p.write_int(@rcvmore_option_value.size) }
-      error_check { LibZMQ.zmq_getsockopt(socket, :rcvmore, @rcvmore_option_value, @rcvmore_option_len) }
-      @rcvmore_option_value.read_int > 0
-    end
-
-    def type
-      @type ||= begin
-        type_option_value = FFI::MemoryPointer.new :int
-        type_option_len = FFI::MemoryPointer.new(:size_t).tap { |p| p.write_int(type_option_value.size) }
-        error_check { LibZMQ.zmq_getsockopt(socket, :type, type_option_value, type_option_len) }
-        LibZMQ::SOCKET_TYPES[type_option_value.read_int]
-      end
+    def bind(endpoint)
+      @zmq_socket.bind(endpoint)
     end
 
     def pointer
-      @socket
+      @zmq_socket.pointer
     end
-    alias_method :socket, :pointer
 
-    def connected?
-      @connected
+    def type
+      @type ||= ZMQ::LibZMQ::SOCKET_TYPES[@zmq_socket.getsockopt(:type)]
+    end
+
+    def readable?
+      (events & ZMQ::LibZMQ::EVENT_FLAGS[:pollin]) > 0
+    end
+
+    def writable?
+      (events & ZMQ::LibZMQ::EVENT_FLAGS[:pollout]) > 0
+    end
+
+    def recv(option=0)
+      ZMQ::Message.open do |msg|
+        msg.recv(@zmq_socket, option)
+        msg.data
+      end
+    end
+
+    def recv_multipart(option=0)
+      ZMQ::Message.open do |msg|
+        parts = []
+        begin
+          msg.recv(@zmq_socket, option)
+          parts << msg.data
+        end until !msg.more
+        parts
+      end
+    end
+
+    def send(*parts)
+      options = [:sndmore]
+      options << parts.pop if parts.last == :dontwait
+      last = parts.size - 1
+      parts.each_with_index do |part, index|
+        options.delete(:sndmore) if index == last
+        @zmq_socket.send(part, *options)
+      end
+    end
+
+    def more?
+      @zmq_socket.getsockopt(:rcvmore)
+    end
+
+    def disconnect(endpoint)
+      @zmq_socket.disconnect(endpoint)
+    end
+
+    def unbind(endpoint)
+      @zmq_socket.unbind(endpoint)
+    end
+
+    def close
+      @zmq_socket.close
+    rescue Errno::ENOTSOCK
+    end
+
+    def closed?
+      @zmq_socket.pointer.nil?
     end
 
     private
 
-    def connected_error_check(&block)
-      raise SocketError, 'Not connected' unless connected?
-      error_check(&block)
-    end
-
-    def error_check(&block)
-      super
-    rescue ZMQError => e
-      case e.error_code
-      when LibZMQ::NATIVE_ERRORS[:eterm] then close! && TermError.raise_error(e)
-      when Errno::EAGAIN::Errno then AgainError.raise_error(e)
-      else SocketError.raise_error(e)
-      end
-    end
-
-    def setup!(options)
-      options.each do |option, value|
-        error_check { LibZMQ.setsockopt(@socket, option, value) }
-      end
+    def events
+      @zmq_socket.getsockopt(:events)
     end
   end
 
   class SubSocket < Socket
     def subscribe(topic)
-      setopt(:subscribe, topic)
+      @zmq_socket.setsockopt(:subscribe, topic)
     end
 
     def unsubscribe(topic)
-      setopt(:unsubscribe, topic)
-    end
-
-    private
-
-    def setopt(option, value)
-      @option_value ||= FFI::MemoryPointer.new 255
-      @option_value.write_string(value)
-      error_check { LibZMQ.zmq_setsockopt(socket, option, @option_value, value.bytesize) }
+      @zmq_socket.setsockopt(:unsubscribe, topic)
     end
   end
 
-  SocketError = Class.new(ZMQError)
-  TermError = Class.new(ZMQError)
-  AgainError = Class.new(ZMQError)
+  class XSubSocket < Socket
+    def subscribe(topic)
+      @zmq_socket.send("\1#{topic}")
+    end
+
+    def unsubscribe(topic)
+      @zmq_socket.send("\0#{topic}")
+    end
+  end
 end
