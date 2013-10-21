@@ -32,7 +32,7 @@ module ZMQ
       LibZMQ::NATIVE_ERRORS[:eterm] => TermError,
       LibZMQ::NATIVE_ERRORS[:emthread] => NoIOThreadError,
     }
-    SYSTEM_ERRORS = Errno.constants.map { |e| Errno.const_get(e) }.each_with_object({}) { |e, h| h[e::Errno] = e }
+    SYSTEM_ERRORS = Errno.constants.select { |e| e.to_s.start_with?('E') }.map { |e| Errno.const_get(e) }.each_with_object({}) { |e, h| h[e::Errno] = e }
 
     def errno
       FFI::errno
