@@ -34,10 +34,10 @@ module ZMQ
 
     after do
       io_pipe.close
-      message.close rescue nil
-      req_socket.close rescue nil
-      rep_socket.close rescue nil
-      context.destroy rescue nil
+      message.close unless message.closed?
+      req_socket.close unless req_socket.closed?
+      rep_socket.close unless rep_socket.closed?
+      context.destroy unless context.destroyed?
     end
 
     describe '#register' do

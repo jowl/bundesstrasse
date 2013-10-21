@@ -7,7 +7,7 @@ module ZMQ
     end
 
     after do
-      context.destroy rescue nil
+      context.destroy unless context.destroyed?
     end
 
     describe '#set/#get' do
@@ -32,6 +32,17 @@ module ZMQ
       it 'raises EFAULT if called more than once' do
         context.destroy
         expect { context.destroy }.to raise_error(Errno::EFAULT)
+      end
+    end
+
+    describe '#destroyed?' do
+      it 'returns true if Context has been destroyed' do
+        context.destroy
+        context.should be_destroyed
+      end
+
+      it "returns false if Context hasn't been destroyed" do
+        context.should_not be_destroyed
       end
     end
 

@@ -7,7 +7,7 @@ module ZMQ
     end
 
     after do
-      message.close rescue nil
+      message.close unless message.closed?
     end
 
     describe '::new' do
@@ -25,9 +25,20 @@ module ZMQ
     end
 
     describe '#close' do
-      it 'raises EFAULT if called more than once' do
+      it 'is idempotent' do
         message.close
-        expect { message.close }.to raise_error(Errno::EFAULT)
+        expect { message.close }.not_to raise_error
+      end
+    end
+
+    describe '#closed?' do
+      it 'returns true if the context has been closed' do
+        message.close
+        message.should be_closed
+      end
+
+      it "returns false if the message hasn't been closed" do
+        message.should_not be_closed
       end
     end
 
@@ -60,10 +71,12 @@ module ZMQ
       end
 
       after do
-        message.close rescue nil
-        socket.close rescue nil
-        sender.close rescue nil
-        context.destroy rescue nil
+        message.close unless message.closed?
+        unless context.destroyed?
+          socket.close unless socket.closed?
+          sender.close unless sender.closed?
+          context.destroy
+        end
       end
 
       it 'receives message' do
@@ -157,10 +170,12 @@ module ZMQ
       end
 
       after do
-        message.close rescue nil
-        socket.close rescue nil
-        receiver.close rescue nil
-        context.destroy rescue nil
+        message.close unless message.closed?
+        unless context.destroyed?
+          socket.close unless socket.closed?
+          receiver.close unless receiver.closed?
+          context.destroy
+        end
       end
 
       it 'sends message' do

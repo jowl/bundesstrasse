@@ -15,8 +15,13 @@ module ZMQ
     end
 
     def close
+      return unless @pointer
       check_rc { LibZMQ.zmq_msg_close(@pointer) }
-      nil
+      @pointer = nil
+    end
+
+    def closed?
+      @pointer.nil?
     end
 
     def data

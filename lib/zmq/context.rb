@@ -22,6 +22,10 @@ module ZMQ
       @pointer = nil
     end
 
+    def destroyed?
+      @pointer.nil?
+    end
+
     def socket(type)
       Socket.new(zmq_socket(type))
     end

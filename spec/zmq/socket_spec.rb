@@ -11,8 +11,10 @@ module ZMQ
     end
 
     after do
-      socket.close rescue nil
-      context.destroy rescue nil
+      unless context.destroyed?
+        socket.close unless socket.closed?
+        context.destroy
+      end
     end
 
     def self.term_error(&block)
@@ -150,8 +152,10 @@ module ZMQ
       end
 
       after do
-        sender.close rescue nil
-        receiver.close rescue nil
+        unless context.destroyed?
+          sender.close unless sender.closed?
+          receiver.close unless receiver.closed?
+        end
       end
 
       describe '#send' do
@@ -232,6 +236,17 @@ module ZMQ
       it 'closes the socket' do
         socket.close
         expect { socket.close }.to raise_error(Errno::ENOTSOCK)
+      end
+    end
+
+    describe '#closed?' do
+      it 'returns true if the socket has been closed' do
+        socket.close
+        socket.should be_closed
+      end
+
+      it "returns false if the socket hasn't been closed" do
+        socket.should_not be_closed
       end
     end
 

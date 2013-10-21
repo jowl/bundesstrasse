@@ -53,6 +53,10 @@ module ZMQ
       @pointer = nil
     end
 
+    def closed?
+      @pointer.nil?
+    end
+
     def disconnect(endpoint)
       check_rc { LibZMQ.zmq_disconnect(@pointer, endpoint) }
       nil
